@@ -8,7 +8,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 async function getFeaturedProducts() {
   try {
     const res = await fetch(`${API}/products?featured_only=true&limit=4`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 300 }, // cache de 5 minutos
     });
     if (!res.ok) return [];
     return res.json();
