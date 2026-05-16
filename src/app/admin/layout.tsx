@@ -45,12 +45,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       onCancel={() => setConfirmLogout(false)}
     />
     {/* Ocupa a tela toda — sobrepõe o Header/Footer do layout raiz via isolamento */}
-    <div className="fixed inset-0 flex bg-gray-50 z-30">
+    <div className="fixed inset-0 flex bg-gray-50 z-50">
       {/* Sidebar */}
       <aside className="w-56 bg-white border-r border-gray-100 flex flex-col shrink-0">
         <div className="px-5 py-5 border-b border-gray-100">
-          <span className="text-sm font-semibold text-gray-900">Beta Bridge</span>
-          <p className="text-xs text-gray-400 mt-0.5">Painel admin</p>
+          <Link href="/" className="block">
+            <span className="text-sm font-semibold text-gray-900">Beta Bridge</span>
+            <p className="text-xs text-gray-400 mt-0.5">Painel admin</p>
+          </Link>
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
