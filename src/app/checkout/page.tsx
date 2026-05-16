@@ -53,9 +53,9 @@ export default function CheckoutPage() {
     }
   }, [authLoading, token, user]);
 
-  // Busca CEP automaticamente
-  async function handleCepBlur() {
-    const cep = form.shipping_zip_code.replace(/\D/g, "");
+  // Busca CEP automaticamente ao atingir 8 dígitos
+  async function fetchCep(value: string) {
+    const cep = value.replace(/\D/g, "");
     if (cep.length !== 8) return;
     setFetchingCep(true);
     try {
@@ -192,10 +192,12 @@ export default function CheckoutPage() {
                   <input
                     required
                     value={form.shipping_zip_code}
-                    onChange={(e) => set("shipping_zip_code", e.target.value)}
-                    onBlur={handleCepBlur}
+                    onChange={(e) => {
+                      set("shipping_zip_code", e.target.value);
+                      fetchCep(e.target.value);
+                    }}
                     className="inp pr-8"
-                    placeholder="00000-000"
+                    placeholder="00000000 ou 00000-000"
                     maxLength={9}
                   />
                   {fetchingCep && (
