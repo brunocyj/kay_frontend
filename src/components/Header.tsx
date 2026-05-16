@@ -63,9 +63,12 @@ export default function Header() {
                   </Link>
                 )}
 
-                <span className="text-sm text-gray-500 truncate max-w-[120px]">
+                <Link
+                  href="/perfil"
+                  className="text-sm text-gray-500 hover:text-gray-900 transition-colors truncate max-w-[120px]"
+                >
                   {user.full_name.split(" ")[0]}
-                </span>
+                </Link>
 
                 <button
                   onClick={() => setConfirmLogout(true)}
@@ -107,6 +110,7 @@ export default function Header() {
             <Link href="/produtos" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Produtos</Link>
             {user ? (
               <>
+                <Link href="/perfil" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Meu perfil</Link>
                 {!isAdmin && (
                   <Link href="/meus-pedidos" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Meus pedidos</Link>
                 )}
