@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2, Package, X, MapPin, ChevronRight, AlertCircle } from "lucide-react";
+import PixInfo from "@/components/PixInfo";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -171,6 +172,11 @@ export default function MeusPedidosPage() {
                     <p>{selected.shipping_city} — {selected.shipping_state}</p>
                   </div>
                 </div>
+
+                {/* PIX — mostra apenas para pedidos aguardando */}
+                {selected.status === "pending" && (
+                  <PixInfo total={Number(selected.total_price)} />
+                )}
 
                 {/* Rastreio */}
                 {selected.tracking_code && (

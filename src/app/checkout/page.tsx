@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, CheckCircle2, Package } from "lucide-react";
+import PixInfo from "@/components/PixInfo";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [orderTotal, setOrderTotal] = useState(0);
   const [fetchingCep, setFetchingCep] = useState(false);
 
   useEffect(() => {
@@ -118,6 +120,7 @@ export default function CheckoutPage() {
 
     if (res.ok) {
       const order = await res.json();
+      setOrderTotal(total);
       clearCart();
       setOrderId(order.id);
     } else {
@@ -130,25 +133,19 @@ export default function CheckoutPage() {
   // Pedido criado com sucesso
   if (orderId) {
     return (
-      <div className="max-w-lg mx-auto px-6 py-20 flex flex-col items-center text-center gap-5">
+      <div className="max-w-lg mx-auto px-6 py-16 flex flex-col items-center text-center gap-6">
         <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
           <CheckCircle2 size={32} className="text-green-500" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Pedido realizado!</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Pedido #{orderId} realizado!</h1>
           <p className="text-sm text-gray-400 mt-2">
-            Seu pedido <span className="font-medium text-gray-700">#{orderId}</span> foi registrado.
-            Aguarde a confirmação de pagamento.
+            Agora realize o pagamento via PIX para confirmarmos seu pedido.
           </p>
         </div>
-        <div className="bg-gray-50 rounded-xl px-5 py-4 text-sm text-gray-600 text-left w-full">
-          <p className="font-medium text-gray-800 mb-1">Próximos passos</p>
-          <ol className="list-decimal list-inside space-y-1 text-gray-500">
-            <li>Realize o pagamento via Pix</li>
-            <li>Envie o comprovante quando solicitado</li>
-            <li>Aguarde a confirmação e envio</li>
-          </ol>
-        </div>
+
+        <PixInfo total={orderTotal} />
+
         <div className="flex gap-3">
           <Link href="/meus-pedidos" className="bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
             Ver meus pedidos
