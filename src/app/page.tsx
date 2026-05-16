@@ -54,7 +54,7 @@ export default async function Home() {
             <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
               Categorias
             </h2>
-            <Link href="/categorias" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
+            <Link href="/produtos" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
               Ver todas →
             </Link>
           </div>
