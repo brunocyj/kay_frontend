@@ -23,6 +23,7 @@ function ProdutosContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [selectedCat, setSelectedCat] = useState<string>(searchParams.get("category") ?? "");
+  const [featuredOnly, setFeaturedOnly] = useState(searchParams.get("destaque") === "true");
   const [showFilters, setShowFilters] = useState(false);
 
   // Achata categorias para o sidebar
@@ -35,10 +36,11 @@ function ProdutosContent() {
   }
   flatten(categories);
 
-  async function fetchProducts(catId: string, q: string) {
+  async function fetchProducts(catId: string, q: string, featured: boolean) {
     setLoading(true);
     const params = new URLSearchParams({ limit: "40" });
     if (catId) params.set("category_id", catId);
+    if (featured) params.set("featured_only", "true");
     const res = await fetch(`${API}/products?${params}`);
     let data: Product[] = await res.json();
     if (q.trim()) {
@@ -60,21 +62,22 @@ function ProdutosContent() {
   }, []);
 
   useEffect(() => {
-    fetchProducts(selectedCat, search);
-    // Sync URL
+    fetchProducts(selectedCat, search, featuredOnly);
     const params = new URLSearchParams();
     if (selectedCat) params.set("category", selectedCat);
     if (search) params.set("q", search);
+    if (featuredOnly) params.set("destaque", "true");
     router.replace(`/produtos${params.toString() ? "?" + params.toString() : ""}`, { scroll: false });
-  }, [selectedCat]);
+  }, [selectedCat, featuredOnly]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchProducts(selectedCat, search);
+    fetchProducts(selectedCat, search, featuredOnly);
   }
 
   function selectCategory(id: string) {
     setSelectedCat(id);
+    setFeaturedOnly(false);
     setShowFilters(false);
   }
 
@@ -86,7 +89,7 @@ function ProdutosContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
-            {selectedCatName ? selectedCatName : "Todos os produtos"}
+            {featuredOnly ? "Destaques" : selectedCatName ? selectedCatName : "Todos os produtos"}
           </h1>
           {!loading && (
             <p className="text-sm text-gray-400 mt-0.5">
@@ -123,18 +126,32 @@ function ProdutosContent() {
       <div className="flex gap-8">
         {/* Sidebar categorias — desktop sempre visível, mobile toggle */}
         <aside className={`shrink-0 w-52 ${showFilters ? "block" : "hidden sm:block"}`}>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categorias</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Filtrar</p>
           <ul className="flex flex-col gap-0.5">
             <li>
               <button
-                onClick={() => selectCategory("")}
+                onClick={() => { setSelectedCat(""); setFeaturedOnly(false); setShowFilters(false); }}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                  selectedCat === "" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                  selectedCat === "" && !featuredOnly ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                Todas
+                Todos
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => { setSelectedCat(""); setFeaturedOnly(true); setShowFilters(false); }}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  featuredOnly ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                ★ Destaques
+              </button>
+            </li>
+          </ul>
+
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-5 mb-3">Categorias</p>
+          <ul className="flex flex-col gap-0.5">
             {flatCats.map((c) => (
               <li key={c.id}>
                 <button
@@ -153,9 +170,9 @@ function ProdutosContent() {
             ))}
           </ul>
 
-          {selectedCat && (
+          {(selectedCat || featuredOnly) && (
             <button
-              onClick={() => selectCategory("")}
+              onClick={() => { setSelectedCat(""); setFeaturedOnly(false); }}
               className="mt-4 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
             >
               <X size={12} /> Limpar filtro
@@ -176,9 +193,9 @@ function ProdutosContent() {
               <p className="text-gray-300 text-5xl mb-4">📦</p>
               <p className="text-sm text-gray-500 font-medium">Nenhum produto encontrado</p>
               <p className="text-xs text-gray-400 mt-1">
-                {selectedCat || search ? "Tente outros filtros ou " : ""}
-                {selectedCat || search ? (
-                  <button onClick={() => { setSearch(""); selectCategory(""); }} className="underline underline-offset-2 hover:text-gray-700">
+                {selectedCat || search || featuredOnly ? "Tente outros filtros ou " : ""}
+                {selectedCat || search || featuredOnly ? (
+                  <button onClick={() => { setSearch(""); setSelectedCat(""); setFeaturedOnly(false); }} className="underline underline-offset-2 hover:text-gray-700">
                     ver todos os produtos
                   </button>
                 ) : "Em breve novos produtos por aqui."}
