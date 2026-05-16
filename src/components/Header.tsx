@@ -37,13 +37,12 @@ export default function Header() {
 
           {/* Nav central — desktop */}
           <nav className="hidden md:flex items-center gap-7 text-sm text-gray-500">
-            <Link href="/produtos" className="hover:text-gray-900 transition-colors">Produtos</Link>
-            <Link href="/categorias" className="hover:text-gray-900 transition-colors">Categorias</Link>
-            {user && (
-              <Link href="/meus-pedidos" className="hover:text-gray-900 transition-colors">
-                Meus pedidos
-              </Link>
-            )}
+          <Link href="/produtos" className="hover:text-gray-900 transition-colors">Produtos</Link>
+          {user && !isAdmin && (
+            <Link href="/meus-pedidos" className="hover:text-gray-900 transition-colors">
+              Meus pedidos
+            </Link>
+          )}
           </nav>
 
           {/* Ações — desktop */}
@@ -86,9 +85,11 @@ export default function Header() {
               </button>
             )}
 
-            <Link href="/carrinho" className="text-gray-500 hover:text-gray-900 transition-colors">
-              <ShoppingCart size={18} />
-            </Link>
+            {!isAdmin && (
+              <Link href="/carrinho" className="text-gray-500 hover:text-gray-900 transition-colors">
+                <ShoppingCart size={18} />
+              </Link>
+            )}
           </div>
 
           {/* Menu mobile */}
@@ -104,10 +105,11 @@ export default function Header() {
         {menuOpen && (
           <div className="md:hidden border-t border-gray-100 bg-white px-6 py-4 flex flex-col gap-4 text-sm text-gray-600">
             <Link href="/produtos" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Produtos</Link>
-            <Link href="/categorias" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Categorias</Link>
             {user ? (
               <>
-                <Link href="/meus-pedidos" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Meus pedidos</Link>
+                {!isAdmin && (
+                  <Link href="/meus-pedidos" className="hover:text-gray-900" onClick={() => setMenuOpen(false)}>Meus pedidos</Link>
+                )}
                 {isAdmin && (
                   <Link href="/admin" className="font-medium text-gray-900" onClick={() => setMenuOpen(false)}>
                     Painel admin
