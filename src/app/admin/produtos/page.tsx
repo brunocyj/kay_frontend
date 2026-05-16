@@ -61,7 +61,7 @@ export default function ProdutosPage() {
     const headers = { Authorization: `Bearer ${token}` };
     const [p, c, s] = await Promise.all([
       fetch(`${API}/admin/products?limit=100`, { headers }).then((r) => r.json()),
-      fetch(`${API}/admin/categories`, { headers }).then((r) => r.json()),
+      fetch(`${API}/categories`).then((r) => r.json()),
       fetch(`${API}/admin/suppliers`, { headers }).then((r) => r.json()),
     ]);
     setProducts(Array.isArray(p) ? p : []);

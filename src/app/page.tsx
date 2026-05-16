@@ -1,5 +1,7 @@
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import HomeHero from "@/components/HomeHero";
+import HomeCTA from "@/components/HomeCTA";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -15,7 +17,7 @@ async function getFeaturedProducts() {
 
 async function getCategories() {
   try {
-    const res = await fetch(`${API}/categories`, { next: { revalidate: 300 } });
+    const res = await fetch(`${API}/categories`, { next: { revalidate: 60 } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
@@ -43,31 +45,7 @@ export default async function Home() {
     <div className="max-w-6xl mx-auto px-6">
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="py-20 md:py-28 flex flex-col gap-6 max-w-xl">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
-          Produtos importados
-        </span>
-        <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 leading-tight tracking-tight">
-          Qualidade direto<br />para você.
-        </h1>
-        <p className="text-gray-400 text-base leading-relaxed">
-          Encontre o que precisa, faça seu pedido e acompanhe cada etapa. Simples assim.
-        </p>
-        <div className="flex gap-3 pt-2">
-          <Link
-            href="/produtos"
-            className="bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Ver produtos
-          </Link>
-          <Link
-            href="/auth/cadastro"
-            className="border border-gray-200 text-gray-600 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Criar conta
-          </Link>
-        </div>
-      </section>
+      <HomeHero />
 
       {/* ── Categorias ───────────────────────────────────────────────────── */}
       {categories.length > 0 && (
@@ -144,18 +122,7 @@ export default async function Home() {
       )}
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="py-16 border-t border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-base font-semibold text-gray-900">Pronto para comprar?</span>
-          <span className="text-sm text-gray-400">Cadastre-se e faça seu primeiro pedido.</span>
-        </div>
-        <Link
-          href="/auth/cadastro"
-          className="bg-gray-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-gray-700 transition-colors whitespace-nowrap"
-        >
-          Criar conta grátis
-        </Link>
-      </section>
+      <HomeCTA />
 
     </div>
   );
