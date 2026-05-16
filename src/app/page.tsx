@@ -15,14 +15,6 @@ async function getFeaturedProducts() {
   } catch { return []; }
 }
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${API}/categories`, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    return res.json();
-  } catch { return []; }
-}
-
 async function getLatestProducts() {
   try {
     const res = await fetch(`${API}/products?limit=8`, { next: { revalidate: 60 } });
@@ -31,13 +23,11 @@ async function getLatestProducts() {
   } catch { return []; }
 }
 
-type Category = { id: number; name: string; slug: string };
 type Product = Parameters<typeof ProductCard>[0]["product"];
 
 export default async function Home() {
-  const [featured, categories, latest] = await Promise.all([
+  const [featured, latest] = await Promise.all([
     getFeaturedProducts(),
-    getCategories(),
     getLatestProducts(),
   ]);
 
@@ -46,31 +36,6 @@ export default async function Home() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <HomeHero />
-
-      {/* ── Categorias ───────────────────────────────────────────────────── */}
-      {categories.length > 0 && (
-        <section className="py-10 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
-              Categorias
-            </h2>
-            <Link href="/produtos" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
-              Ver todas →
-            </Link>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {categories.slice(0, 10).map((cat: Category) => (
-              <Link
-                key={cat.id}
-                href={`/produtos?category=${cat.id}`}
-                className="border border-gray-200 text-gray-600 text-sm px-4 py-1.5 rounded-full hover:border-gray-900 hover:text-gray-900 transition-colors"
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* ── Destaques ────────────────────────────────────────────────────── */}
       {featured.length > 0 && (
