@@ -11,8 +11,8 @@ export default function LogoutConfirm({ open, onConfirm, onCancel }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50" onClick={onCancel} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 bg-black/25 backdrop-blur-sm z-[60]" onClick={onCancel} />
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
         <div
           className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6 pointer-events-auto flex flex-col gap-4"
           onClick={(e) => e.stopPropagation()}
