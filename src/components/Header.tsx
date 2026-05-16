@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { ShoppingCart, User, Search, Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import LogoutConfirm from "./LogoutConfirm";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const { user, isAdmin, logout, openLogin } = useAuth();
+  const { count, openCart } = useCart();
 
   function handleLogout() {
     logout();
@@ -89,9 +91,17 @@ export default function Header() {
             )}
 
             {!isAdmin && (
-              <Link href="/carrinho" className="text-gray-500 hover:text-gray-900 transition-colors">
+              <button
+                onClick={openCart}
+                className="relative text-gray-500 hover:text-gray-900 transition-colors"
+              >
                 <ShoppingCart size={18} />
-              </Link>
+                {count > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </button>
             )}
           </div>
 

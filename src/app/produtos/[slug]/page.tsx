@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AddToCart from "@/components/AddToCart";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -37,13 +38,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const cover = product.images.find((i) => i.is_cover) ?? product.images[0];
   const gallery = product.images.filter((i) => !i.is_cover && i.url !== cover?.url);
-
-  // Agrupa variações por tipo (ex: "Cor" → ["Azul", "Vermelho"])
-  const varGroups: Record<string, Variation[]> = {};
-  product.variations.filter((v) => v.is_active).forEach((v) => {
-    if (!varGroups[v.name]) varGroups[v.name] = [];
-    varGroups[v.name].push(v);
-  });
 
   const basePrice = Number(product.price);
 
@@ -103,41 +97,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="text-3xl font-bold text-gray-900">{fmt(product.price)}</div>
 
-          {/* Variações */}
-          {Object.entries(varGroups).map(([groupName, vars]) => (
-            <div key={groupName}>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{groupName}</p>
-              <div className="flex flex-wrap gap-2">
-                {vars.map((v) => {
-                  const totalPrice = basePrice + Number(v.price_modifier);
-                  return (
-                    <div
-                      key={v.id}
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-gray-400 transition-colors cursor-default"
-                    >
-                      <span>{v.value}</span>
-                      {Number(v.price_modifier) !== 0 && (
-                        <span className="ml-1 text-xs text-gray-400">({fmt(totalPrice)})</span>
-                      )}
-                      {v.stock === 0 && (
-                        <span className="ml-1 text-xs text-gray-300">esgotado</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          {/* Botão adicionar ao carrinho (client component com seleção de variação) */}
+          <AddToCart
+            productId={product.id}
+            productName={product.name}
+            productSlug={product.slug}
+            productImage={cover?.url ?? null}
+            basePrice={Number(product.price)}
+            variations={product.variations}
+          />
 
-          {/* Botão comprar */}
-          <div className="flex flex-col gap-3 pt-2">
-            <button className="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-700 transition-colors text-sm">
-              Comprar agora
-            </button>
-            <p className="text-xs text-gray-400 text-center">
-              Pagamento confirmado manualmente · Envio após confirmação
-            </p>
-          </div>
+          <p className="text-xs text-gray-400 text-center">
+            Pagamento confirmado manualmente · Envio após confirmação
+          </p>
 
           {/* Descrição */}
           {product.description && (
