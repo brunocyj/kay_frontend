@@ -10,7 +10,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 type Category = { id: number; name: string; slug: string; children: Category[] };
 type Product = {
   id: number; name: string; slug: string; price: string;
-  short_description: string | null; is_featured: boolean;
+  short_description?: string; is_featured: boolean;
   images: { url: string; is_cover: boolean; alt_text?: string }[];
 };
 
