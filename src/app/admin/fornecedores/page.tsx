@@ -107,7 +107,7 @@ export default function FornecedoresPage() {
       <label className="text-xs font-medium text-gray-600">{label}</label>
       {key === "notes" ? (
         <textarea
-          value={form[key]}
+          value={form[key] ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           rows={3}
           placeholder={placeholder}
@@ -116,7 +116,7 @@ export default function FornecedoresPage() {
       ) : (
         <input
           type={type}
-          value={form[key]}
+          value={form[key] ?? ""}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           placeholder={placeholder}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
