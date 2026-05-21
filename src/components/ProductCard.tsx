@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Product = {
   id: number;
@@ -11,6 +14,7 @@ type Product = {
 };
 
 export default function ProductCard({ product }: { product: Product }) {
+  const { t } = useLanguage();
   const cover = product.images?.find((i) => i.is_cover) ?? product.images?.[0];
   const price = typeof product.price === "string" ? parseFloat(product.price) : product.price;
 
@@ -19,7 +23,6 @@ export default function ProductCard({ product }: { product: Product }) {
       href={`/produtos/${product.slug}`}
       className="group flex flex-col bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all hover:shadow-sm"
     >
-      {/* Imagem */}
       <div className="bg-gray-50 aspect-square overflow-hidden">
         {cover ? (
           <img
@@ -29,12 +32,11 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-200 text-xs select-none">
-            sem imagem
+            {t.card_no_image}
           </div>
         )}
       </div>
 
-      {/* Info */}
       <div className="p-4 flex flex-col gap-1">
         <span className="text-sm text-gray-800 font-medium line-clamp-2 leading-snug">
           {product.name}

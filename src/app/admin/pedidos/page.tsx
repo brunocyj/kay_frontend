@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import {
   X, Loader2, MapPin, Package, ChevronDown, AlertCircle,
@@ -31,14 +32,14 @@ type Supplier = { id: number; name: string };
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Aguardando",
-  confirmed: "Confirmado",
-  paid: "Pago",
-  purchasing: "Comprando",
-  shipped: "Enviado",
-  delivered: "Entregue",
-  cancelled: "Cancelado",
+const STATUS_KEY: Record<string, string> = {
+  pending: "admin_orders_status_pending",
+  confirmed: "admin_orders_status_confirmed",
+  paid: "admin_orders_status_paid",
+  purchasing: "admin_orders_status_purchasing",
+  shipped: "admin_orders_status_shipped",
+  delivered: "admin_orders_status_delivered",
+  cancelled: "admin_orders_status_cancelled",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -61,6 +62,7 @@ function fmt(val: string | number) {
 
 export default function AdminPedidosPage() {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +109,7 @@ export default function AdminPedidosPage() {
             setSelected(updated);
           }}
           onRefetch={() => fetchOrders(statusFilter)}
+          statusKey={STATUS_KEY}
         />
       )}
 
@@ -114,10 +117,10 @@ export default function AdminPedidosPage() {
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Pedidos</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Gerencie os pedidos dos clientes</p>
+            <h1 className="text-xl font-semibold text-gray-900">{t.admin_orders_title}</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{t.admin_orders_subtitle}</p>
           </div>
-          <span className="text-xs text-gray-400">{orders.length} pedido{orders.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-gray-400">{orders.length} {orders.length === 1 ? t.admin_orders_item : t.admin_orders_items}</span>
         </div>
 
         {/* Filtros de status */}
@@ -126,7 +129,7 @@ export default function AdminPedidosPage() {
             onClick={() => setStatusFilter("all")}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${statusFilter === "all" ? "bg-gray-900 text-white border-gray-900" : "border-gray-200 text-gray-500 hover:border-gray-400"}`}
           >
-            Todos
+            {t.admin_orders_all}
           </button>
           {ALL_STATUSES.map((s) => (
             <button
@@ -134,7 +137,7 @@ export default function AdminPedidosPage() {
               onClick={() => setStatusFilter(s)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${statusFilter === s ? "bg-gray-900 text-white border-gray-900" : `${STATUS_STYLE[s]} hover:opacity-80`}`}
             >
-              {STATUS_LABEL[s]}
+              {t[STATUS_KEY[s] as keyof typeof t]}
             </button>
           ))}
         </div>
@@ -149,7 +152,7 @@ export default function AdminPedidosPage() {
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-16 text-center">
             <Package size={32} className="mx-auto text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">Nenhum pedido encontrado.</p>
+            <p className="text-sm text-gray-400">{t.admin_orders_none}</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-100 overflow-hidden">
@@ -169,12 +172,12 @@ export default function AdminPedidosPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{order.shipping_name}</p>
                   <p className="text-xs text-gray-400">
-                    {order.items.length} {order.items.length === 1 ? "item" : "itens"} · {order.shipping_city}, {order.shipping_state}
+                    {order.items.length} {order.items.length === 1 ? t.admin_orders_item : t.admin_orders_items} · {order.shipping_city}, {order.shipping_state}
                   </p>
                 </div>
 
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full border shrink-0 ${STATUS_STYLE[order.status] ?? ""}`}>
-                  {STATUS_LABEL[order.status] ?? order.status}
+                  {t[STATUS_KEY[order.status] as keyof typeof t] ?? order.status}
                 </span>
 
                 <span className="text-sm font-semibold text-gray-900 shrink-0">{fmt(order.total_price)}</span>
@@ -190,14 +193,16 @@ export default function AdminPedidosPage() {
 // ── Modal de gestão ───────────────────────────────────────────────────────────
 
 function OrderModal({
-  order, token, suppliers, supMap, onClose, onUpdated, onRefetch,
+  order, token, suppliers, supMap, onClose, onUpdated, onRefetch, statusKey,
 }: {
   order: Order; token: string; suppliers: Supplier[];
   supMap: Record<number, string>;
   onClose: () => void;
   onUpdated: (o: Order) => void;
   onRefetch: () => void;
+  statusKey: Record<string, string>;
 }) {
+  const { t } = useLanguage();
   const [newStatus, setNewStatus] = useState(order.status);
   const [trackingCode, setTrackingCode] = useState(order.tracking_code ?? "");
   const [adminNotes, setAdminNotes] = useState(order.admin_notes ?? "");
@@ -229,7 +234,7 @@ function OrderModal({
       onRefetch();
     } else {
       const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Erro ao atualizar pedido.");
+      setError(err.detail ?? t.admin_orders_err_update);
     }
     setSaving(false);
   }
@@ -246,7 +251,7 @@ function OrderModal({
       onRefetch();
     } else {
       const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Erro ao cancelar.");
+      setError(err.detail ?? t.admin_orders_err_cancel);
     }
     setCancelling(false);
   }
@@ -269,7 +274,7 @@ function OrderModal({
             </div>
             <div className="flex items-center gap-3">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_STYLE[order.status]}`}>
-                {STATUS_LABEL[order.status]}
+                {t[statusKey[order.status] as keyof typeof t] ?? order.status}
               </span>
               <button onClick={onClose} className="text-gray-300 hover:text-gray-700 transition-colors">
                 <X size={18} />
@@ -282,7 +287,7 @@ function OrderModal({
             <div className="grid grid-cols-2 gap-5">
               {/* Itens */}
               <div className="col-span-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Itens do pedido</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t.admin_orders_modal_items}</p>
                 <ul className="flex flex-col gap-2">
                   {order.items.map((item) => (
                     <li key={item.id} className="flex justify-between gap-4 text-sm">
@@ -296,7 +301,7 @@ function OrderModal({
                   ))}
                 </ul>
                 <div className="flex justify-between text-sm font-semibold text-gray-900 border-t border-gray-100 mt-3 pt-3">
-                  <span>Total do cliente</span>
+                  <span>{t.admin_orders_customer_total}</span>
                   <span>{fmt(order.total_price)}</span>
                 </div>
               </div>
@@ -316,7 +321,7 @@ function OrderModal({
               {/* Notas do cliente */}
               {order.customer_notes && (
                 <div className="col-span-2 sm:col-span-1 bg-amber-50 border border-amber-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-amber-600 mb-1">Obs. do cliente</p>
+                  <p className="text-xs font-semibold text-amber-600 mb-1">{t.admin_orders_customer_notes}</p>
                   <p className="text-sm text-amber-800">{order.customer_notes}</p>
                 </div>
               )}
@@ -324,10 +329,10 @@ function OrderModal({
 
             {/* Campos de gestão */}
             <div className="border-t border-gray-100 pt-5 flex flex-col gap-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gerenciar pedido</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.admin_orders_manage}</p>
 
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Status">
+                <Field label={t.admin_orders_status}>
                   <div className="relative">
                     <select
                       value={newStatus}
@@ -335,21 +340,21 @@ function OrderModal({
                       className="inp appearance-none pr-8"
                     >
                       {ALL_STATUSES.map((s) => (
-                        <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                        <option key={s} value={s}>{t[statusKey[s] as keyof typeof t]}</option>
                       ))}
                     </select>
                     <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                   </div>
                 </Field>
 
-                <Field label="Fornecedor">
+                <Field label={t.admin_orders_supplier}>
                   <div className="relative">
                     <select
                       value={supplierId}
                       onChange={(e) => setSupplierId(e.target.value)}
                       className="inp appearance-none pr-8"
                     >
-                      <option value="">Nenhum</option>
+                      <option value="">{t.admin_orders_no_supplier}</option>
                       {suppliers.map((s) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
@@ -358,22 +363,22 @@ function OrderModal({
                   </div>
                 </Field>
 
-                <Field label="Código de rastreio" className="col-span-2">
+                <Field label={t.admin_orders_tracking} className="col-span-2">
                   <input
                     value={trackingCode}
                     onChange={(e) => setTrackingCode(e.target.value)}
                     className="inp"
-                    placeholder="Código dos Correios ou transportadora"
+                    placeholder={t.admin_orders_tracking_placeholder}
                   />
                 </Field>
 
-                <Field label="Notas internas" className="col-span-2">
+                <Field label={t.admin_orders_internal_notes} className="col-span-2">
                   <textarea
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
                     rows={2}
                     className="inp resize-none"
-                    placeholder="Anotações internas (não visível ao cliente)"
+                    placeholder={t.admin_orders_internal_placeholder}
                   />
                 </Field>
               </div>
@@ -395,13 +400,13 @@ function OrderModal({
                 className="flex items-center gap-2 text-sm text-red-500 border border-red-100 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
                 {cancelling && <Loader2 size={13} className="animate-spin" />}
-                Cancelar pedido
+                {t.admin_orders_cancel}
               </button>
             ) : <div />}
 
             <div className="flex gap-2">
               <button onClick={onClose} className="border border-gray-200 text-gray-600 text-sm px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                Fechar
+                {t.admin_orders_close}
               </button>
               <button
                 onClick={handleSave}
@@ -409,7 +414,7 @@ function OrderModal({
                 className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 {saving && <Loader2 size={14} className="animate-spin" />}
-                {saving ? "Salvando..." : "Salvar alterações"}
+                {saving ? t.admin_orders_saving : t.admin_orders_save}
               </button>
             </div>
           </div>

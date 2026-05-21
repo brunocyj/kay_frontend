@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import { Power, Search, Building2, User as UserIcon } from "lucide-react";
 
@@ -21,14 +22,15 @@ type User = {
   created_at: string;
 };
 
-const ROLE_LABEL: Record<string, string> = {
-  buyer: "Cliente",
-  admin: "Admin",
-  superadmin: "Superadmin",
-};
-
 export default function UsuariosPage() {
   const { token } = useAuth();
+  const { t } = useLanguage();
+
+  const ROLE_LABEL: Record<string, string> = {
+    buyer: t.admin_users_role_buyer_label,
+    admin: t.admin_users_role_admin_label,
+    superadmin: "Superadmin",
+  };
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -88,15 +90,15 @@ export default function UsuariosPage() {
               </div>
 
               <div className="flex flex-col gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl p-4">
-                <Row label="E-mail" value={selected.email} />
-                <Row label="Tipo" value={selected.person_type === "PF" ? "Pessoa Física" : "Pessoa Jurídica"} />
-                {selected.company_name && <Row label="Empresa" value={selected.company_name} />}
+                <Row label={t.admin_users_label_email} value={selected.email} />
+                <Row label={t.admin_users_label_type} value={selected.person_type === "PF" ? t.admin_users_type_pf : t.admin_users_type_pj} />
+                {selected.company_name && <Row label={t.admin_users_label_company} value={selected.company_name} />}
                 {selected.cnpj && <Row label="CNPJ" value={selected.cnpj} />}
-                {selected.phone && <Row label="Telefone" value={selected.phone} />}
-                <Row label="Perfil" value={ROLE_LABEL[selected.role]} />
-                <Row label="Verificado" value={selected.is_verified ? "Sim" : "Não"} />
-                <Row label="Status" value={selected.is_active ? "Ativo" : "Inativo"} />
-                <Row label="Cadastro" value={new Date(selected.created_at).toLocaleDateString("pt-BR")} />
+                {selected.phone && <Row label={t.admin_users_label_phone} value={selected.phone} />}
+                <Row label={t.admin_users_label_role} value={ROLE_LABEL[selected.role]} />
+                <Row label={t.admin_users_label_verified} value={selected.is_verified ? t.admin_users_yes : t.admin_users_no} />
+                <Row label={t.admin_users_label_status} value={selected.is_active ? t.admin_users_status_active : t.admin_users_status_inactive} />
+                <Row label={t.admin_users_label_since} value={new Date(selected.created_at).toLocaleDateString("pt-BR")} />
               </div>
 
               {selected.role === "buyer" && (
@@ -109,7 +111,7 @@ export default function UsuariosPage() {
                   }`}
                 >
                   <Power size={14} />
-                  {selected.is_active ? "Desativar conta" : "Reativar conta"}
+                  {selected.is_active ? t.admin_users_deactivate : t.admin_users_reactivate}
                 </button>
               )}
 
@@ -117,7 +119,7 @@ export default function UsuariosPage() {
                 onClick={() => setSelected(null)}
                 className="text-sm text-gray-400 hover:text-gray-700 transition-colors text-center"
               >
-                Fechar
+                {t.admin_users_close}
               </button>
             </div>
           </div>
@@ -127,8 +129,8 @@ export default function UsuariosPage() {
       <div className="flex flex-col gap-6">
         {/* Cabeçalho */}
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Usuários</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Clientes e administradores cadastrados</p>
+          <h1 className="text-xl font-semibold text-gray-900">{t.admin_users_title}</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{t.admin_users_subtitle}</p>
         </div>
 
         {/* Filtros */}
@@ -139,7 +141,7 @@ export default function UsuariosPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nome, e-mail ou username..."
+              placeholder={t.admin_users_search}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400"
             />
           </div>
@@ -149,10 +151,10 @@ export default function UsuariosPage() {
             onChange={(e) => setRoleFilter(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-gray-400 text-gray-600"
           >
-            <option value="all">Todos os perfis</option>
-            <option value="buyer">Clientes</option>
-            <option value="admin">Admins</option>
-            <option value="superadmin">Superadmin</option>
+            <option value="all">{t.admin_users_all_roles}</option>
+            <option value="buyer">{t.admin_users_role_buyer}</option>
+            <option value="admin">{t.admin_users_role_admin}</option>
+            <option value="superadmin">{t.admin_users_role_superadmin}</option>
           </select>
 
           <select
@@ -160,13 +162,13 @@ export default function UsuariosPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-gray-400 text-gray-600"
           >
-            <option value="all">Todos os status</option>
-            <option value="active">Ativos</option>
-            <option value="inactive">Inativos</option>
+            <option value="all">{t.admin_users_all_status}</option>
+            <option value="active">{t.admin_users_active}</option>
+            <option value="inactive">{t.admin_users_inactive}</option>
           </select>
 
           <span className="text-xs text-gray-400 ml-auto">
-            {filtered.length} usuário{filtered.length !== 1 ? "s" : ""}
+            {filtered.length} {filtered.length === 1 ? t.admin_users_count_one : t.admin_users_count_many}
           </span>
         </div>
 
@@ -179,7 +181,7 @@ export default function UsuariosPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-            <p className="text-sm text-gray-400">Nenhum usuário encontrado.</p>
+            <p className="text-sm text-gray-400">{t.admin_users_none}</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-100 overflow-hidden">

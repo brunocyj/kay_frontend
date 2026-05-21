@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Variation = {
   id: number; name: string; value: string;
@@ -22,6 +23,7 @@ export default function AddToCart({
   productId, productName, productSlug, productImage, basePrice, variations,
 }: Props) {
   const { addItem } = useCart();
+  const { t } = useLanguage();
   const [selectedVarId, setSelectedVarId] = useState<number | null>(null);
   const [added, setAdded] = useState(false);
 
@@ -31,7 +33,6 @@ export default function AddToCart({
   const selectedVar = activeVariations.find((v) => v.id === selectedVarId) ?? null;
   const finalPrice = basePrice + (selectedVar ? Number(selectedVar.price_modifier) : 0);
 
-  // Agrupa por tipo
   const groups: Record<string, Variation[]> = {};
   activeVariations.forEach((v) => {
     if (!groups[v.name]) groups[v.name] = [];
@@ -59,7 +60,6 @@ export default function AddToCart({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Seletor de variações */}
       {Object.entries(groups).map(([groupName, vars]) => (
         <div key={groupName}>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{groupName}</p>
@@ -81,7 +81,7 @@ export default function AddToCart({
                   }`}
                 >
                   {v.value}
-                  {isOut && <span className="ml-1 text-xs opacity-60">esgotado</span>}
+                  {isOut && <span className="ml-1 text-xs opacity-60">{t.addtocart_out_of_stock}</span>}
                 </button>
               );
             })}
@@ -90,7 +90,7 @@ export default function AddToCart({
       ))}
 
       {hasVariations && !selectedVarId && (
-        <p className="text-xs text-amber-600">Selecione uma variação antes de adicionar ao carrinho</p>
+        <p className="text-xs text-amber-600">{t.addtocart_select_variation}</p>
       )}
 
       <button
@@ -103,9 +103,9 @@ export default function AddToCart({
         }`}
       >
         {added ? (
-          <><Check size={16} /> Adicionado ao carrinho</>
+          <><Check size={16} /> {t.addtocart_added}</>
         ) : (
-          <><ShoppingCart size={16} /> Adicionar ao carrinho</>
+          <><ShoppingCart size={16} /> {t.addtocart_add}</>
         )}
       </button>
     </div>

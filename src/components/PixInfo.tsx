@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, CheckCheck } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   total: number;
@@ -12,6 +13,7 @@ function fmt(val: number) {
 }
 
 export default function PixInfo({ total }: Props) {
+  const { t } = useLanguage();
   const pixKey = process.env.NEXT_PUBLIC_PIX_KEY ?? "";
   const pixName = process.env.NEXT_PUBLIC_PIX_NAME ?? "Beta Bridge";
   const [copied, setCopied] = useState(false);
@@ -31,15 +33,15 @@ export default function PixInfo({ total }: Props) {
           ₽
         </div>
         <div>
-          <p className="text-sm font-semibold text-green-800">Pague via PIX</p>
-          <p className="text-xs text-green-600">Transferência instantânea · confirmaremos em até 24h</p>
+          <p className="text-sm font-semibold text-green-800">{t.pix_title}</p>
+          <p className="text-xs text-green-600">{t.pix_subtitle}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between bg-white border border-green-100 rounded-xl px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xs text-gray-400 mb-0.5">Chave PIX</p>
+            <p className="text-xs text-gray-400 mb-0.5">{t.pix_key_label}</p>
             <p className="text-sm font-mono text-gray-900 truncate">{pixKey}</p>
             <p className="text-xs text-gray-400 mt-0.5">{pixName}</p>
           </div>
@@ -52,23 +54,23 @@ export default function PixInfo({ total }: Props) {
             }`}
           >
             {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
-            {copied ? "Copiado!" : "Copiar"}
+            {copied ? t.pix_copied : t.pix_copy}
           </button>
         </div>
 
         <div className="flex items-center justify-between bg-white border border-green-100 rounded-xl px-4 py-3">
           <div>
-            <p className="text-xs text-gray-400 mb-0.5">Valor a pagar</p>
+            <p className="text-xs text-gray-400 mb-0.5">{t.pix_amount_label}</p>
             <p className="text-lg font-bold text-gray-900">{fmt(total)}</p>
           </div>
           <span className="text-xs text-green-600 bg-green-100 px-2.5 py-1 rounded-full font-medium">
-            Transferir exatamente este valor
+            {t.pix_exact}
           </span>
         </div>
       </div>
 
       <p className="text-xs text-green-700 bg-green-100 rounded-lg px-3 py-2">
-        Após o pagamento, aguarde a confirmação. Você acompanha o status em <strong>Meus pedidos</strong>.
+        {t.pix_note} <strong>{t.pix_note_link}</strong>.
       </p>
     </div>
   );

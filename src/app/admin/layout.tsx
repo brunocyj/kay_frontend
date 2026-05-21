@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -10,20 +11,21 @@ import {
   Truck, Tag, LogOut, ChevronRight
 } from "lucide-react";
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
-  { href: "/admin/produtos", label: "Produtos", icon: Package },
-  { href: "/admin/categorias", label: "Categorias", icon: Tag },
-  { href: "/admin/fornecedores", label: "Fornecedores", icon: Truck },
-  { href: "/admin/usuarios", label: "Usuários", icon: Users },
-];
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, loading, logout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const NAV = [
+    { href: "/admin", label: t.admin_nav_dashboard, icon: LayoutDashboard },
+    { href: "/admin/pedidos", label: t.admin_nav_orders, icon: ShoppingBag },
+    { href: "/admin/produtos", label: t.admin_nav_products, icon: Package },
+    { href: "/admin/categorias", label: t.admin_nav_categories, icon: Tag },
+    { href: "/admin/fornecedores", label: t.admin_nav_suppliers, icon: Truck },
+    { href: "/admin/usuarios", label: t.admin_nav_users, icon: Users },
+  ];
 
   useEffect(() => {
     if (!loading && !isAdmin) router.replace("/");
@@ -51,7 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="px-5 py-5 border-b border-gray-100">
           <Link href="/" className="block">
             <span className="text-sm font-semibold text-gray-900">Beta Bridge</span>
-            <p className="text-xs text-gray-400 mt-0.5">Painel admin</p>
+            <p className="text-xs text-gray-400 mt-0.5">{t.admin_panel_subtitle}</p>
           </Link>
         </div>
 
@@ -78,16 +80,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="px-3 py-4 border-t border-gray-100">
-          <div className="px-3 py-1.5 text-xs text-gray-400 truncate mb-2">
+        <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-1">
+          <div className="px-3 py-1.5 text-xs text-gray-400 truncate">
             {user?.email}
           </div>
+
+          {/* Botão de idioma */}
+          <button
+            onClick={() => setLang(lang === "pt" ? "zh" : "pt")}
+            title={lang === "pt" ? "Switch to Chinese" : "切换到葡萄牙语"}
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          >
+            <span className="text-base leading-none">{lang === "pt" ? "🇨🇳" : "🇧🇷"}</span>
+            <span className="font-semibold">{lang === "pt" ? "中文" : "PT"}</span>
+          </button>
+
           <button
             onClick={() => setConfirmLogout(true)}
             className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
           >
             <LogOut size={15} />
-            Sair
+            {t.admin_logout}
           </button>
         </div>
       </aside>

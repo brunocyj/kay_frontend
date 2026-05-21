@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -25,6 +26,7 @@ type Feedback = { type: "success" | "error"; message: string };
 
 export default function PerfilPage() {
   const { token, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [user, setUser] = useState<UserFull | null>(null);
@@ -79,10 +81,10 @@ export default function PerfilPage() {
     if (res.ok) {
       const updated = await res.json();
       setUser(updated);
-      setProfileFeedback({ type: "success", message: "Perfil atualizado com sucesso." });
+      setProfileFeedback({ type: "success", message: t.profile_saved_ok });
     } else {
       const err = await res.json().catch(() => ({}));
-      setProfileFeedback({ type: "error", message: err.detail ?? "Erro ao atualizar perfil." });
+      setProfileFeedback({ type: "error", message: err.detail ?? t.profile_save_err });
     }
     setSavingProfile(false);
   }
@@ -92,11 +94,11 @@ export default function PerfilPage() {
     setPasswordFeedback(null);
 
     if (newPassword !== confirmPassword) {
-      setPasswordFeedback({ type: "error", message: "A nova senha e a confirmação não coincidem." });
+      setPasswordFeedback({ type: "error", message: t.profile_pw_mismatch });
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordFeedback({ type: "error", message: "A nova senha deve ter no mínimo 6 caracteres." });
+      setPasswordFeedback({ type: "error", message: t.profile_pw_too_short });
       return;
     }
 
@@ -108,13 +110,13 @@ export default function PerfilPage() {
     });
 
     if (res.status === 204) {
-      setPasswordFeedback({ type: "success", message: "Senha alterada com sucesso." });
+      setPasswordFeedback({ type: "success", message: t.profile_pw_ok });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } else {
       const err = await res.json().catch(() => ({}));
-      setPasswordFeedback({ type: "error", message: err.detail ?? "Erro ao alterar senha." });
+      setPasswordFeedback({ type: "error", message: err.detail ?? t.profile_pw_err });
     }
     setSavingPassword(false);
   }
@@ -132,30 +134,30 @@ export default function PerfilPage() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">Meu perfil</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Gerencie suas informações pessoais</p>
+        <h1 className="text-xl font-semibold text-gray-900">{t.profile_title}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{t.profile_subtitle}</p>
       </div>
 
       {/* Informações não editáveis */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Dados da conta</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t.profile_account_data}</p>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <InfoRow label="Username" value={`@${user.username}`} />
-          <InfoRow label="E-mail" value={user.email} />
-          <InfoRow label="Tipo" value={user.person_type === "PF" ? "Pessoa Física" : "Pessoa Jurídica"} />
+          <InfoRow label={t.profile_username} value={`@${user.username}`} />
+          <InfoRow label={t.profile_email} value={user.email} />
+          <InfoRow label={t.profile_type} value={user.person_type === "PF" ? t.profile_type_pf : t.profile_type_pj} />
           {user.person_type === "PF"
             ? null
             : user.cnpj && <InfoRow label="CNPJ" value={user.cnpj} />
           }
-          <InfoRow label="Membro desde" value={new Date(user.created_at).toLocaleDateString("pt-BR")} />
+          <InfoRow label={t.profile_member_since} value={new Date(user.created_at).toLocaleDateString("pt-BR")} />
         </div>
       </div>
 
       {/* Editar perfil */}
       <form onSubmit={handleSaveProfile} className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 flex flex-col gap-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Informações pessoais</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.profile_personal_info}</p>
 
-        <Field label="Nome completo">
+        <Field label={t.profile_full_name}>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -165,7 +167,7 @@ export default function PerfilPage() {
           />
         </Field>
 
-        <Field label="Telefone">
+        <Field label={t.profile_phone}>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -175,7 +177,7 @@ export default function PerfilPage() {
         </Field>
 
         {user.person_type === "PJ" && (
-          <Field label="Nome da empresa">
+          <Field label={t.profile_company}>
             <input
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
@@ -193,15 +195,15 @@ export default function PerfilPage() {
           className="self-end flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
         >
           {savingProfile && <Loader2 size={14} className="animate-spin" />}
-          {savingProfile ? "Salvando..." : "Salvar alterações"}
+          {savingProfile ? t.profile_saving : t.profile_save}
         </button>
       </form>
 
       {/* Trocar senha */}
       <form onSubmit={handleChangePassword} className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Alterar senha</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.profile_change_pw}</p>
 
-        <Field label="Senha atual">
+        <Field label={t.profile_current_pw}>
           <input
             type="password"
             value={currentPassword}
@@ -212,25 +214,25 @@ export default function PerfilPage() {
           />
         </Field>
 
-        <Field label="Nova senha">
+        <Field label={t.profile_new_pw}>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
             className="inp"
-            placeholder="Mínimo 6 caracteres"
+            placeholder={t.register_pw_placeholder}
           />
         </Field>
 
-        <Field label="Confirmar nova senha">
+        <Field label={t.profile_confirm_pw}>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             className="inp"
-            placeholder="Repita a nova senha"
+            placeholder={t.profile_confirm_pw_placeholder}
           />
         </Field>
 
@@ -242,7 +244,7 @@ export default function PerfilPage() {
           className="self-end flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
         >
           {savingPassword && <Loader2 size={14} className="animate-spin" />}
-          {savingPassword ? "Alterando..." : "Alterar senha"}
+          {savingPassword ? t.profile_pw_changing : t.profile_pw_change}
         </button>
       </form>
       <style jsx global>{`

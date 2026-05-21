@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -35,6 +36,7 @@ const EMPTY: ShippingForm = {
 export default function CheckoutPage() {
   const { token, user, loading: authLoading, openLogin } = useAuth();
   const { items, total, clearCart } = useCart();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [form, setForm] = useState<ShippingForm>(EMPTY);
@@ -125,7 +127,7 @@ export default function CheckoutPage() {
       setOrderId(order.id);
     } else {
       const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Erro ao criar pedido. Tente novamente.");
+      setError(err.detail ?? t.checkout_error_default);
     }
     setSubmitting(false);
   }
@@ -138,20 +140,18 @@ export default function CheckoutPage() {
           <CheckCircle2 size={32} className="text-green-500" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Pedido #{orderId} realizado!</h1>
-          <p className="text-sm text-gray-400 mt-2">
-            Agora realize o pagamento via PIX para confirmarmos seu pedido.
-          </p>
+          <h1 className="text-xl font-semibold text-gray-900">{t.checkout_success_title.replace("{id}", String(orderId))}</h1>
+          <p className="text-sm text-gray-400 mt-2">{t.checkout_success_body}</p>
         </div>
 
         <PixInfo total={orderTotal} />
 
         <div className="flex gap-3">
           <Link href="/meus-pedidos" className="bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
-            Ver meus pedidos
+            {t.checkout_see_orders}
           </Link>
           <Link href="/produtos" className="border border-gray-200 text-gray-600 text-sm px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-            Continuar comprando
+            {t.checkout_continue}
           </Link>
         </div>
       </div>
@@ -162,8 +162,8 @@ export default function CheckoutPage() {
     return (
       <div className="max-w-lg mx-auto px-6 py-20 flex flex-col items-center text-center gap-4">
         <Package size={40} className="text-gray-200" />
-        <p className="text-sm text-gray-400">Seu carrinho está vazio.</p>
-        <Link href="/produtos" className="text-sm text-gray-900 underline underline-offset-2">Ver produtos</Link>
+        <p className="text-sm text-gray-400">{t.checkout_empty}</p>
+        <Link href="/produtos" className="text-sm text-gray-900 underline underline-offset-2">{t.checkout_see_products}</Link>
       </div>
     );
   }
@@ -171,26 +171,26 @@ export default function CheckoutPage() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">Finalizar compra</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Confirme o endereço de entrega</p>
+        <h1 className="text-xl font-semibold text-gray-900">{t.checkout_title}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{t.checkout_subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Formulário */}
         <form onSubmit={handleSubmit} className="lg:col-span-3 flex flex-col gap-5">
           <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Endereço de entrega</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t.checkout_address_section}</p>
 
-            <Field label="Nome do destinatário *">
+            <Field label={t.checkout_name}>
               <input required value={form.shipping_name} onChange={(e) => set("shipping_name", e.target.value)} className="inp" placeholder="Nome completo" />
             </Field>
 
-            <Field label="Telefone">
+            <Field label={t.checkout_phone}>
               <input value={form.shipping_phone} onChange={(e) => set("shipping_phone", e.target.value)} className="inp" placeholder="(11) 91234-5678" />
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="CEP *">
+              <Field label={t.checkout_zip}>
                 <div className="relative">
                   <input
                     required
@@ -206,41 +206,41 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </Field>
-              <Field label="Número *">
+              <Field label={t.checkout_number}>
                 <input required value={form.shipping_number} onChange={(e) => set("shipping_number", e.target.value)} className="inp" placeholder="123" />
               </Field>
             </div>
 
-            <Field label="Rua / Logradouro *">
+            <Field label={t.checkout_street}>
               <input required value={form.shipping_street} onChange={(e) => set("shipping_street", e.target.value)} className="inp" placeholder="Rua das Flores" />
             </Field>
 
-            <Field label="Complemento">
+            <Field label={t.checkout_complement}>
               <input value={form.shipping_complement} onChange={(e) => set("shipping_complement", e.target.value)} className="inp" placeholder="Apto 42, Bloco B" />
             </Field>
 
-            <Field label="Bairro *">
+            <Field label={t.checkout_neighborhood}>
               <input required value={form.shipping_neighborhood} onChange={(e) => set("shipping_neighborhood", e.target.value)} className="inp" placeholder="Centro" />
             </Field>
 
             <div className="grid grid-cols-3 gap-4">
-              <Field label="Cidade *" className="col-span-2">
+              <Field label={t.checkout_city} className="col-span-2">
                 <input required value={form.shipping_city} onChange={(e) => set("shipping_city", e.target.value)} className="inp" placeholder="São Paulo" />
               </Field>
-              <Field label="UF *">
+              <Field label={t.checkout_state}>
                 <input required value={form.shipping_state} onChange={(e) => set("shipping_state", e.target.value)} className="inp" placeholder="SP" maxLength={2} />
               </Field>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <Field label="Observações (opcional)">
+            <Field label={t.checkout_notes}>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 className="inp resize-none"
-                placeholder="Instruções de entrega, referências..."
+                placeholder={t.checkout_notes_placeholder}
               />
             </Field>
           </div>
@@ -255,14 +255,14 @@ export default function CheckoutPage() {
             className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50 text-sm"
           >
             {submitting && <Loader2 size={15} className="animate-spin" />}
-            {submitting ? "Processando..." : "Confirmar pedido"}
+            {submitting ? t.checkout_submitting : t.checkout_submit}
           </button>
         </form>
 
         {/* Resumo */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-2xl border border-gray-100 p-6 sticky top-24">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Resumo do pedido</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t.checkout_summary}</p>
             <ul className="flex flex-col gap-3 mb-4">
               {items.map((item) => (
                 <li key={`${item.product_id}-${item.variation_id}`} className="flex gap-3 items-start">
@@ -276,14 +276,14 @@ export default function CheckoutPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 truncate">{item.product_name}</p>
                     {item.variation_label && <p className="text-xs text-gray-400">{item.variation_label}</p>}
-                    <p className="text-xs text-gray-400">Qtd: {item.quantity}</p>
+                    <p className="text-xs text-gray-400">{t.checkout_qty} {item.quantity}</p>
                   </div>
                   <span className="text-sm font-medium text-gray-900 shrink-0">{fmt(item.price * item.quantity)}</span>
                 </li>
               ))}
             </ul>
             <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
-              <span className="text-sm text-gray-500">Total</span>
+              <span className="text-sm text-gray-500">{t.checkout_total}</span>
               <span className="text-xl font-bold text-gray-900">{fmt(total)}</span>
             </div>
           </div>

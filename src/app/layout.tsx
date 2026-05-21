@@ -7,6 +7,7 @@ import LoginModal from "@/components/LoginModal";
 import CartDrawer from "@/components/CartDrawer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -24,15 +25,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${geist.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50" suppressHydrationWarning>
-        <AuthProvider>
-          <CartProvider>
-            <Header />
-            <LoginModal />
-            <CartDrawer />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Header />
+              <LoginModal />
+              <CartDrawer />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

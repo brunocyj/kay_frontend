@@ -1,6 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddToCart from "@/components/AddToCart";
+import {
+  ProductBreadcrumb,
+  ProductNoImage,
+  ProductFeaturedBadge,
+  ProductPaymentNote,
+  ProductDescriptionTitle,
+} from "@/components/ProductDetailTexts";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -39,18 +45,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const cover = product.images.find((i) => i.is_cover) ?? product.images[0];
   const gallery = product.images.filter((i) => !i.is_cover && i.url !== cover?.url);
 
-  const basePrice = Number(product.price);
-
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-400 mb-8">
-        <Link href="/" className="hover:text-gray-700 transition-colors">Início</Link>
-        <span>/</span>
-        <Link href="/produtos" className="hover:text-gray-700 transition-colors">Produtos</Link>
-        <span>/</span>
-        <span className="text-gray-600 truncate max-w-xs">{product.name}</span>
-      </nav>
+      <ProductBreadcrumb name={product.name} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* ── Galeria ─────────────────────────────────────────────────────── */}
@@ -63,9 +60,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-200 text-sm select-none">
-                sem imagem
-              </div>
+              <ProductNoImage />
             )}
           </div>
 
@@ -82,11 +77,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* ── Info ────────────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-5">
-          {product.is_featured && (
-            <span className="inline-flex self-start text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100 px-2.5 py-1 rounded-full">
-              ★ Destaque
-            </span>
-          )}
+          {product.is_featured && <ProductFeaturedBadge />}
 
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 leading-snug">{product.name}</h1>
@@ -97,7 +88,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="text-3xl font-bold text-gray-900">{fmt(product.price)}</div>
 
-          {/* Botão adicionar ao carrinho (client component com seleção de variação) */}
           <AddToCart
             productId={product.id}
             productName={product.name}
@@ -107,14 +97,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             variations={product.variations}
           />
 
-          <p className="text-xs text-gray-400 text-center">
-            Pagamento confirmado manualmente · Envio após confirmação
-          </p>
+          <ProductPaymentNote />
 
-          {/* Descrição */}
           {product.description && (
             <div className="border-t border-gray-100 pt-5">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Descrição</p>
+              <ProductDescriptionTitle />
               <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {product.description}
               </div>

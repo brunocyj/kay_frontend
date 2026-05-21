@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import {
   Plus, Pencil, Power, X, Loader2, Package,
@@ -50,6 +51,7 @@ function fmt(val: string | number) {
 
 export default function ProdutosPage() {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -114,14 +116,14 @@ export default function ProdutosPage() {
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Produtos</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Gerencie o catálogo de produtos</p>
+            <h1 className="text-xl font-semibold text-gray-900">{t.admin_prod_title}</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{t.admin_prod_subtitle}</p>
           </div>
           <button
             onClick={openCreate}
             className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
           >
-            <Plus size={15} /> Novo produto
+            <Plus size={15} /> {t.admin_prod_new}
           </button>
         </div>
 
@@ -135,9 +137,9 @@ export default function ProdutosPage() {
         ) : products.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-16 text-center">
             <Package size={32} className="mx-auto text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">Nenhum produto cadastrado.</p>
+            <p className="text-sm text-gray-400">{t.admin_prod_none}</p>
             <button onClick={openCreate} className="mt-4 text-sm text-gray-700 underline underline-offset-2 hover:text-gray-900">
-              Criar primeiro produto
+              {t.admin_prod_new}
             </button>
           </div>
         ) : (
@@ -154,7 +156,7 @@ export default function ProdutosPage() {
                     {p.is_featured && <Star size={12} className="text-amber-400 shrink-0" fill="currentColor" />}
                   </div>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs text-gray-400">{catMap[p.category_id ?? -1] ?? "Sem categoria"}</span>
+                    <span className="text-xs text-gray-400">{catMap[p.category_id ?? -1] ?? t.admin_prod_no_category}</span>
                     {p.suppliers.length > 0 && (
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Truck size={10} /> {p.suppliers.length} fornecedor{p.suppliers.length > 1 ? "es" : ""}
@@ -173,13 +175,13 @@ export default function ProdutosPage() {
 
                 {/* Ações */}
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => openEdit(p)} className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Editar">
+                  <button onClick={() => openEdit(p)} className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title={t.admin_prod_edit}>
                     <Pencil size={13} />
                   </button>
                   <button
                     onClick={() => toggleActive(p)}
                     className={`p-1.5 rounded-lg transition-colors ${p.is_active ? "text-gray-300 hover:text-red-500 hover:bg-red-50" : "text-gray-300 hover:text-green-600 hover:bg-green-50"}`}
-                    title={p.is_active ? "Desativar" : "Ativar"}
+                    title={p.is_active ? t.admin_cat_deactivate : t.admin_cat_activate}
                   >
                     <Power size={13} />
                   </button>
@@ -207,6 +209,7 @@ function ProductModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useLanguage();
   const isEdit = !!product;
   const [tab, setTab] = useState<Tab>("info");
   const [saving, setSaving] = useState(false);
@@ -357,23 +360,23 @@ function ProductModal({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
             <h2 className="text-sm font-semibold text-gray-900">
-              {isEdit ? "Editar produto" : createdProductId ? "Produto criado — adicionar detalhes" : "Novo produto"}
+              {isEdit ? t.admin_prod_edit_title : t.admin_prod_new_title}
             </h2>
             <button onClick={onClose} className="text-gray-300 hover:text-gray-600 transition-colors"><X size={18} /></button>
           </div>
 
           {/* Tabs */}
           <div className="flex border-b border-gray-100 shrink-0 px-6">
-            {(["info", "suppliers", "variations"] as Tab[]).map((t) => (
+            {(["info", "suppliers", "variations"] as Tab[]).map((tabKey) => (
               <button
-                key={t}
-                onClick={() => { if (t !== "info" && !createdProductId) return; setTab(t); }}
-                disabled={t !== "info" && !createdProductId}
+                key={tabKey}
+                onClick={() => { if (tabKey !== "info" && !createdProductId) return; setTab(tabKey); }}
+                disabled={tabKey !== "info" && !createdProductId}
                 className={`px-1 py-3 mr-5 text-xs font-medium border-b-2 transition-colors ${
-                  tab === t ? "border-gray-900 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                  tab === tabKey ? "border-gray-900 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
               >
-                {t === "info" ? "Informações" : t === "suppliers" ? "Fornecedores" : "Variações"}
+                {tabKey === "info" ? t.admin_prod_tab_basic : tabKey === "suppliers" ? t.admin_prod_tab_suppliers : t.admin_prod_tab_variations}
               </button>
             ))}
           </div>
@@ -385,32 +388,32 @@ function ProductModal({
             {tab === "info" && (
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="Nome *" className="col-span-2">
+                  <Field label={t.admin_prod_field_name} className="col-span-2">
                     <input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Nome do produto" className="inp" />
                   </Field>
-                  <Field label="Slug *">
+                  <Field label={t.admin_prod_field_slug}>
                     <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="nome-do-produto" className="inp font-mono text-xs" />
                   </Field>
-                  <Field label="Preço de venda (R$) *">
+                  <Field label={t.admin_prod_field_price}>
                     <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" className="inp" />
                   </Field>
-                  <Field label="Categoria" className="col-span-2">
+                  <Field label={t.admin_prod_field_category} className="col-span-2">
                     <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="inp">
-                      <option value="">Sem categoria</option>
+                      <option value="">{t.admin_prod_no_category}</option>
                       {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
                   </Field>
-                  <Field label="Descrição curta" className="col-span-2">
+                  <Field label={t.admin_prod_field_short_desc} className="col-span-2">
                     <input value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} placeholder="Resumo para listagem" className="inp" />
                   </Field>
-                  <Field label="Descrição completa" className="col-span-2">
+                  <Field label={t.admin_prod_field_desc} className="col-span-2">
                     <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Descrição detalhada..." rows={3} className="inp resize-none" />
                   </Field>
                 </div>
 
                 <div className="flex gap-6">
-                  <Toggle label="Destaque" value={isFeatured} onChange={setIsFeatured} />
-                  {isEdit && <Toggle label="Ativo" value={isActive} onChange={setIsActive} />}
+                  <Toggle label={t.admin_prod_field_featured} value={isFeatured} onChange={setIsFeatured} />
+                  {isEdit && <Toggle label={t.admin_prod_field_active} value={isActive} onChange={setIsActive} />}
                 </div>
 
                 {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
@@ -440,18 +443,18 @@ function ProductModal({
 
                 {availableSuppliers.length > 0 ? (
                   <div className="border border-dashed border-gray-200 rounded-xl p-4 flex flex-col gap-3">
-                    <p className="text-xs font-medium text-gray-500">Adicionar fornecedor</p>
+                    <p className="text-xs font-medium text-gray-500">{t.admin_prod_sup_add}</p>
                     <div className="grid grid-cols-2 gap-3">
-                      <Field label="Fornecedor" className="col-span-2">
+                      <Field label={t.admin_orders_supplier} className="col-span-2">
                         <select value={newSupplierId} onChange={(e) => setNewSupplierId(e.target.value)} className="inp">
                           <option value="">Selecionar...</option>
                           {availableSuppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                       </Field>
-                      <Field label="Preço de custo (R$) *">
+                      <Field label={t.admin_prod_sup_cost}>
                         <input type="number" step="0.01" min="0" value={newCostPrice} onChange={(e) => setNewCostPrice(e.target.value)} placeholder="0,00" className="inp" />
                       </Field>
-                      <Field label="SKU do fornecedor">
+                      <Field label="SKU">
                         <input value={newSupplierSku} onChange={(e) => setNewSupplierSku(e.target.value)} placeholder="Opcional" className="inp" />
                       </Field>
                     </div>
@@ -461,7 +464,7 @@ function ProductModal({
                       className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-40"
                     >
                       {addingSupplier ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                      Adicionar
+                      {t.admin_prod_sup_add}
                     </button>
                   </div>
                 ) : (
@@ -495,18 +498,18 @@ function ProductModal({
                 )}
 
                 <div className="border border-dashed border-gray-200 rounded-xl p-4 flex flex-col gap-3">
-                  <p className="text-xs font-medium text-gray-500">Nova variação</p>
+                  <p className="text-xs font-medium text-gray-500">{t.admin_prod_var_add}</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Tipo (ex: Cor, Tamanho)">
+                    <Field label={t.admin_prod_var_name}>
                       <input value={varName} onChange={(e) => setVarName(e.target.value)} placeholder="Cor" className="inp" />
                     </Field>
-                    <Field label="Valor (ex: Azul, G)">
+                    <Field label={t.admin_prod_var_value}>
                       <input value={varValue} onChange={(e) => setVarValue(e.target.value)} placeholder="Azul" className="inp" />
                     </Field>
-                    <Field label="Mod. de preço (R$)">
+                    <Field label={t.admin_prod_var_price_mod}>
                       <input type="number" step="0.01" value={varPrice} onChange={(e) => setVarPrice(e.target.value)} className="inp" />
                     </Field>
-                    <Field label="Estoque">
+                    <Field label={t.admin_prod_var_stock}>
                       <input type="number" min="0" value={varStock} onChange={(e) => setVarStock(e.target.value)} className="inp" />
                     </Field>
                     <Field label="SKU" className="col-span-2">
@@ -519,7 +522,7 @@ function ProductModal({
                     className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-40"
                   >
                     {addingVar ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                    Adicionar variação
+                    {t.admin_prod_var_add}
                   </button>
                 </div>
               </div>
@@ -531,23 +534,23 @@ function ProductModal({
             {tab !== "info" && createdProductId && !isEdit ? (
               <>
                 <button onClick={() => setTab(tab === "suppliers" ? "info" : "suppliers")} className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 transition-colors">
-                  <ChevronDown size={14} className="rotate-90" /> Voltar
+                  <ChevronDown size={14} className="rotate-90" /> ←
                 </button>
                 <div className="flex gap-2">
                   {tab === "suppliers" && (
                     <button onClick={() => setTab("variations")} className="bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors">
-                      Próximo: Variações
+                      {t.admin_prod_tab_variations} →
                     </button>
                   )}
                   <button onClick={onSaved} className="bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
-                    Concluir
+                    {t.admin_prod_save}
                   </button>
                 </div>
               </>
             ) : (
               <>
                 <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 text-sm py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  Cancelar
+                  {t.admin_prod_cancel}
                 </button>
                 <button
                   onClick={saveInfo}
@@ -555,7 +558,7 @@ function ProductModal({
                   className="flex-1 bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 size={14} className="animate-spin" />}
-                  {saving ? "Salvando..." : isEdit ? "Salvar alterações" : "Criar produto →"}
+                  {saving ? t.admin_prod_saving : isEdit ? t.admin_prod_save : `${t.admin_prod_create} →`}
                 </button>
               </>
             )}

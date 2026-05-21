@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage, Translations } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, ChevronRight, FolderOpen, Folder, Power, X, Loader2 } from "lucide-react";
 
@@ -47,6 +48,7 @@ function slugify(str: string) {
 
 export default function CategoriasPage() {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -164,8 +166,15 @@ export default function CategoriasPage() {
     });
   }
 
-  // Todas as categorias raiz para o select de pai
-  const rootCategories = categories.filter((c) => c.parent_id === null);
+  // Achata toda a hierarquia para o select de pai (com indentação)
+  const flatCategories: { id: number; label: string; depth: number }[] = [];
+  function flattenCats(cats: Category[], depth = 0) {
+    cats.forEach((c) => {
+      flatCategories.push({ id: c.id, label: c.name, depth });
+      if (c.children?.length) flattenCats(c.children, depth + 1);
+    });
+  }
+  flattenCats(categories);
 
   return (
     <>
@@ -180,7 +189,7 @@ export default function CategoriasPage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900">
-                  {editing ? "Editar categoria" : "Nova categoria"}
+                  {editing ? t.admin_cat_edit_title : t.admin_cat_new_title}
                 </h2>
                 <button onClick={() => setModalOpen(false)} className="text-gray-300 hover:text-gray-600 transition-colors">
                   <X size={18} />
@@ -188,7 +197,7 @@ export default function CategoriasPage() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <Field label="Nome *">
+                <Field label={t.admin_cat_field_name}>
                   <input
                     type="text"
                     value={form.name}
@@ -198,7 +207,7 @@ export default function CategoriasPage() {
                   />
                 </Field>
 
-                <Field label="Slug *">
+                <Field label={t.admin_cat_field_slug}>
                   <input
                     type="text"
                     value={form.slug}
@@ -208,7 +217,7 @@ export default function CategoriasPage() {
                   />
                 </Field>
 
-                <Field label="Descrição">
+                <Field label={t.admin_cat_field_desc}>
                   <textarea
                     value={form.description}
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -219,16 +228,20 @@ export default function CategoriasPage() {
                 </Field>
 
                 {!editing && (
-                  <Field label="Categoria pai">
+                  <Field label={t.admin_cat_field_parent}>
                     <select
                       value={form.parent_id}
                       onChange={(e) => setForm((f) => ({ ...f, parent_id: e.target.value }))}
                       className="input"
                     >
-                      <option value="">Nenhuma (categoria raiz)</option>
-                      {rootCategories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
+                      <option value="">{t.admin_cat_no_parent}</option>
+                      {flatCategories
+                        .filter((c) => !editing || c.id !== (editing as Category).id)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {"　".repeat(c.depth)}{c.depth > 0 ? "└ " : ""}{c.label}
+                          </option>
+                        ))}
                     </select>
                   </Field>
                 )}
@@ -241,7 +254,7 @@ export default function CategoriasPage() {
                     >
                       <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_active ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
-                    <span className="text-sm text-gray-600">Ativa</span>
+                    <span className="text-sm text-gray-600">{t.admin_cat_field_active}</span>
                   </label>
                 )}
               </div>
@@ -255,7 +268,7 @@ export default function CategoriasPage() {
                   onClick={() => setModalOpen(false)}
                   className="flex-1 border border-gray-200 text-gray-600 text-sm py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar
+                  {t.admin_cat_cancel}
                 </button>
                 <button
                   onClick={handleSave}
@@ -263,7 +276,7 @@ export default function CategoriasPage() {
                   className="flex-1 bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 size={14} className="animate-spin" />}
-                  {saving ? "Salvando..." : "Salvar"}
+                  {saving ? t.admin_cat_saving : editing ? t.admin_cat_save : t.admin_cat_create}
                 </button>
               </div>
             </div>
@@ -275,15 +288,15 @@ export default function CategoriasPage() {
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Categorias</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Organize os produtos em categorias e subcategorias</p>
+            <h1 className="text-xl font-semibold text-gray-900">{t.admin_cat_title}</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{t.admin_cat_subtitle}</p>
           </div>
           <button
             onClick={() => openCreate()}
             className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
           >
             <Plus size={15} />
-            Nova categoria
+            {t.admin_cat_new}
           </button>
         </div>
 
@@ -297,12 +310,12 @@ export default function CategoriasPage() {
         ) : categories.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-16 text-center">
             <FolderOpen size={32} className="mx-auto text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">Nenhuma categoria cadastrada.</p>
+            <p className="text-sm text-gray-400">{t.admin_cat_none}</p>
             <button
               onClick={() => openCreate()}
               className="mt-4 text-sm text-gray-700 underline underline-offset-2 hover:text-gray-900"
             >
-              Criar primeira categoria
+              {t.admin_cat_new}
             </button>
           </div>
         ) : (
@@ -317,6 +330,7 @@ export default function CategoriasPage() {
                 onEdit={openEdit}
                 onToggleActive={toggleActive}
                 onAddChild={(id) => openCreate(id)}
+                t={t}
               />
             ))}
           </div>
@@ -343,7 +357,7 @@ export default function CategoriasPage() {
 }
 
 function CategoryRow({
-  cat, depth, expanded, onToggleExpand, onEdit, onToggleActive, onAddChild,
+  cat, depth, expanded, onToggleExpand, onEdit, onToggleActive, onAddChild, t,
 }: {
   cat: Category;
   depth: number;
@@ -352,6 +366,7 @@ function CategoryRow({
   onEdit: (cat: Category) => void;
   onToggleActive: (cat: Category) => void;
   onAddChild: (parentId: number) => void;
+  t: Translations;
 }) {
   const hasChildren = cat.children.length > 0;
   const isExpanded = expanded.has(cat.id);
@@ -391,31 +406,30 @@ function CategoryRow({
         {/* Badge filhos */}
         {hasChildren && (
           <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
-            {cat.children.length} {cat.children.length === 1 ? "subcategoria" : "subcategorias"}
+            {cat.children.length} sub
           </span>
         )}
 
         {/* Ações */}
         <div className="flex items-center gap-1 shrink-0">
-          {depth === 0 && (
-            <button
-              onClick={() => onAddChild(cat.id)}
-              title="Adicionar subcategoria"
-              className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Plus size={13} />
-            </button>
-          )}
+          <button
+            onClick={() => onAddChild(cat.id)}
+            title={t.admin_cat_add_sub}
+            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Plus size={12} />
+            sub
+          </button>
           <button
             onClick={() => onEdit(cat)}
-            title="Editar"
+            title={t.admin_cat_edit}
             className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Pencil size={13} />
           </button>
           <button
             onClick={() => onToggleActive(cat)}
-            title={cat.is_active ? "Desativar" : "Ativar"}
+            title={cat.is_active ? t.admin_cat_deactivate : t.admin_cat_activate}
             className={`p-1.5 rounded-lg transition-colors ${
               cat.is_active
                 ? "text-gray-300 hover:text-red-500 hover:bg-red-50"
@@ -438,6 +452,7 @@ function CategoryRow({
           onEdit={onEdit}
           onToggleActive={onToggleActive}
           onAddChild={onAddChild}
+          t={t}
         />
       ))}
     </>

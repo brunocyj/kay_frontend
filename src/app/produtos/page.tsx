@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -17,6 +18,7 @@ type Product = {
 function ProdutosContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -26,7 +28,6 @@ function ProdutosContent() {
   const [featuredOnly, setFeaturedOnly] = useState(searchParams.get("destaque") === "true");
   const [showFilters, setShowFilters] = useState(false);
 
-  // Achata categorias para o sidebar
   const flatCats: { id: number; label: string; depth: number }[] = [];
   function flatten(cats: Category[], depth = 0) {
     cats.forEach((c) => {
@@ -82,23 +83,22 @@ function ProdutosContent() {
   }
 
   const selectedCatName = flatCats.find((c) => String(c.id) === selectedCat)?.label;
+  const count = products.length;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
-      {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
-            {featuredOnly ? "Destaques" : selectedCatName ? selectedCatName : "Todos os produtos"}
+            {featuredOnly ? t.products_title_featured : selectedCatName ? selectedCatName : t.products_title_all}
           </h1>
           {!loading && (
             <p className="text-sm text-gray-400 mt-0.5">
-              {products.length} produto{products.length !== 1 ? "s" : ""} encontrado{products.length !== 1 ? "s" : ""}
+              {count} {count === 1 ? t.products_count_one : t.products_count_many}
             </p>
           )}
         </div>
 
-        {/* Busca */}
         <form onSubmit={handleSearch} className="flex items-center gap-2">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -106,12 +106,12 @@ function ProdutosContent() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar produto..."
+              placeholder={t.products_search_placeholder}
               className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400 w-56"
             />
           </div>
           <button type="submit" className="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-            Buscar
+            {t.products_search_btn}
           </button>
           <button
             type="button"
@@ -124,9 +124,8 @@ function ProdutosContent() {
       </div>
 
       <div className="flex gap-8">
-        {/* Sidebar categorias — desktop sempre visível, mobile toggle */}
         <aside className={`shrink-0 w-52 ${showFilters ? "block" : "hidden sm:block"}`}>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Filtrar</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t.products_filter}</p>
           <ul className="flex flex-col gap-0.5">
             <li>
               <button
@@ -135,7 +134,7 @@ function ProdutosContent() {
                   selectedCat === "" && !featuredOnly ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                Todos
+                {t.products_all}
               </button>
             </li>
             <li>
@@ -145,12 +144,12 @@ function ProdutosContent() {
                   featuredOnly ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                ★ Destaques
+                {t.products_featured_filter}
               </button>
             </li>
           </ul>
 
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-5 mb-3">Categorias</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-5 mb-3">{t.products_categories}</p>
           <ul className="flex flex-col gap-0.5">
             {flatCats.map((c) => (
               <li key={c.id}>
@@ -175,12 +174,11 @@ function ProdutosContent() {
               onClick={() => { setSelectedCat(""); setFeaturedOnly(false); }}
               className="mt-4 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
             >
-              <X size={12} /> Limpar filtro
+              <X size={12} /> {t.products_clear_filter}
             </button>
           )}
         </aside>
 
-        {/* Grade de produtos */}
         <div className="flex-1">
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -191,14 +189,14 @@ function ProdutosContent() {
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <p className="text-gray-300 text-5xl mb-4">📦</p>
-              <p className="text-sm text-gray-500 font-medium">Nenhum produto encontrado</p>
+              <p className="text-sm text-gray-500 font-medium">{t.products_none_title}</p>
               <p className="text-xs text-gray-400 mt-1">
-                {selectedCat || search || featuredOnly ? "Tente outros filtros ou " : ""}
+                {selectedCat || search || featuredOnly ? t.products_none_try : ""}
                 {selectedCat || search || featuredOnly ? (
                   <button onClick={() => { setSearch(""); setSelectedCat(""); setFeaturedOnly(false); }} className="underline underline-offset-2 hover:text-gray-700">
-                    ver todos os produtos
+                    {t.products_none_see_all}
                   </button>
-                ) : "Em breve novos produtos por aqui."}
+                ) : t.products_none_soon}
               </p>
             </div>
           ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Power, X, Loader2, ExternalLink } from "lucide-react";
 
@@ -25,6 +26,7 @@ const EMPTY: Omit<Supplier, "id" | "is_active"> = {
 
 export default function FornecedoresPage() {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -138,7 +140,7 @@ export default function FornecedoresPage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900">
-                  {editing ? "Editar fornecedor" : "Novo fornecedor"}
+                  {editing ? t.admin_sup_edit_title : t.admin_sup_new_title}
                 </h2>
                 <button onClick={() => setModalOpen(false)} className="text-gray-300 hover:text-gray-600 transition-colors">
                   <X size={18} />
@@ -146,13 +148,13 @@ export default function FornecedoresPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                {field("name", "Nome *", "text", "Nome da empresa")}
-                {field("contact_name", "Contato", "text", "Nome do responsável")}
-                {field("whatsapp", "WhatsApp", "text", "+55 11 90000-0000")}
-                {field("email", "E-mail", "email", "contato@empresa.com")}
-                {field("website", "Website", "url", "https://...")}
-                {field("country", "País", "text", "China")}
-                {field("notes", "Observações", "text", "Notas internas sobre este fornecedor...")}
+                {field("name", t.admin_sup_field_name, "text", "Nome da empresa")}
+                {field("contact_name", t.admin_sup_field_contact, "text", "Nome do responsável")}
+                {field("whatsapp", t.admin_sup_field_whatsapp, "text", "+55 11 90000-0000")}
+                {field("email", t.admin_sup_field_email, "email", "contato@empresa.com")}
+                {field("website", t.admin_sup_field_website, "url", "https://...")}
+                {field("country", t.admin_sup_field_country, "text", "China")}
+                {field("notes", t.admin_sup_field_notes, "text", t.admin_sup_field_notes_ph)}
               </div>
 
               {error && (
@@ -164,7 +166,7 @@ export default function FornecedoresPage() {
                   onClick={() => setModalOpen(false)}
                   className="flex-1 border border-gray-200 text-gray-600 text-sm py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar
+                  {t.admin_sup_cancel}
                 </button>
                 <button
                   onClick={handleSave}
@@ -172,7 +174,7 @@ export default function FornecedoresPage() {
                   className="flex-1 bg-gray-900 text-white text-sm py-2.5 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 size={14} className="animate-spin" />}
-                  {saving ? "Salvando..." : editing ? "Salvar" : "Criar"}
+                  {saving ? t.admin_sup_saving : editing ? t.admin_sup_save : t.admin_sup_create}
                 </button>
               </div>
             </div>
@@ -184,8 +186,8 @@ export default function FornecedoresPage() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Fornecedores</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Empresas e contatos de onde você compra</p>
+            <h1 className="text-xl font-semibold text-gray-900">{t.admin_sup_title}</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{t.admin_sup_subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
@@ -195,14 +197,14 @@ export default function FornecedoresPage() {
                 onChange={(e) => setShowAll(e.target.checked)}
                 className="rounded"
               />
-              Ver inativos
+              {t.admin_sup_show_inactive}
             </label>
             <button
               onClick={openCreate}
               className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
               <Plus size={15} />
-              Novo fornecedor
+              {t.admin_sup_new}
             </button>
           </div>
         </div>
@@ -215,9 +217,9 @@ export default function FornecedoresPage() {
           </div>
         ) : suppliers.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-            <p className="text-gray-400 text-sm">Nenhum fornecedor cadastrado.</p>
+            <p className="text-gray-400 text-sm">{t.admin_sup_none}</p>
             <button onClick={openCreate} className="mt-3 text-sm text-gray-900 underline underline-offset-2">
-              Criar o primeiro
+              {t.admin_sup_create_first}
             </button>
           </div>
         ) : (
@@ -238,7 +240,7 @@ export default function FornecedoresPage() {
                     )}
                     {!s.is_active && (
                       <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">
-                        inativo
+                        {t.admin_sup_inactive_badge}
                       </span>
                     )}
                   </div>
@@ -257,7 +259,7 @@ export default function FornecedoresPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                      title="Abrir website"
+                      title={t.admin_sup_open_website}
                     >
                       <ExternalLink size={15} />
                     </a>
@@ -265,7 +267,7 @@ export default function FornecedoresPage() {
                   <button
                     onClick={() => openEdit(s)}
                     className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    title="Editar"
+                    title={t.admin_sup_edit}
                   >
                     <Pencil size={15} />
                   </button>
@@ -276,7 +278,7 @@ export default function FornecedoresPage() {
                         ? "text-gray-400 hover:text-red-500 hover:bg-red-50"
                         : "text-gray-400 hover:text-green-600 hover:bg-green-50"
                     }`}
-                    title={s.is_active ? "Desativar" : "Reativar"}
+                    title={s.is_active ? t.admin_sup_deactivate : t.admin_sup_activate}
                   >
                     <Power size={15} />
                   </button>
