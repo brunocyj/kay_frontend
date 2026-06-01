@@ -411,6 +411,13 @@ const dict = {
     admin_prod_var_active: "Ativo",
     admin_prod_var_add: "Adicionar variação",
     admin_prod_var_none: "Nenhuma variação.",
+    admin_prod_tab_images: "Imagens",
+    admin_prod_img_cover: "Capa",
+    admin_prod_img_set_cover: "Definir como capa",
+    admin_prod_img_delete: "Excluir imagem",
+    admin_prod_img_upload_hint: "Clique para enviar uma imagem",
+    admin_prod_img_uploading: "Enviando...",
+    admin_prod_img_none: "Nenhuma imagem. Envie a primeira acima.",
   },
 
   zh: {
@@ -819,6 +826,13 @@ const dict = {
     admin_prod_var_active: "启用",
     admin_prod_var_add: "添加规格",
     admin_prod_var_none: "暂无规格。",
+    admin_prod_tab_images: "图片",
+    admin_prod_img_cover: "封面",
+    admin_prod_img_set_cover: "设为封面",
+    admin_prod_img_delete: "删除图片",
+    admin_prod_img_upload_hint: "点击上传图片",
+    admin_prod_img_uploading: "上传中...",
+    admin_prod_img_none: "暂无图片，请在上方上传。",
   },
 } as const;
 

@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState } from "react";
 import {
   Plus, Pencil, Power, X, Loader2, Package,
-  Truck, Layers, Star, ChevronDown, Trash2,
+  Truck, Layers, Star, ChevronDown, Trash2, ImageIcon, Upload,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -26,12 +26,16 @@ type ProductSupplier = {
   supplier_sku: string | null; notes: string | null; is_preferred: boolean;
 };
 
+type ProductImage = {
+  id: number; url: string; alt_text: string | null; order: number; is_cover: boolean;
+};
+
 type Product = {
   id: number; name: string; slug: string;
   short_description: string | null; description: string | null;
   category_id: number | null; price: string;
   is_active: boolean; is_featured: boolean;
-  variations: Variation[]; suppliers: ProductSupplier[];
+  images: ProductImage[]; variations: Variation[]; suppliers: ProductSupplier[];
   created_at: string;
 };
 
@@ -197,7 +201,7 @@ export default function ProdutosPage() {
 
 // ── Modal com abas ───────────────────────────────────────────────────────────
 
-type Tab = "info" | "suppliers" | "variations";
+type Tab = "info" | "images" | "suppliers" | "variations";
 
 function ProductModal({
   token, product, categories, suppliers, onClose, onSaved,
@@ -224,6 +228,10 @@ function ProductModal({
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ""));
   const [isFeatured, setIsFeatured] = useState(product?.is_featured ?? false);
   const [isActive, setIsActive] = useState(product?.is_active ?? true);
+
+  // ── Imagens ────────────────────────────────────────────────────────────────
+  const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
+  const [uploadingImg, setUploadingImg] = useState(false);
 
   // ── Fornecedores ───────────────────────────────────────────────────────────
   const [productSuppliers, setProductSuppliers] = useState<ProductSupplier[]>(product?.suppliers ?? []);
@@ -346,6 +354,44 @@ function ProductModal({
     setVariations((prev) => prev.filter((v) => v.id !== varId));
   }
 
+  // ── Imagens ────────────────────────────────────────────────────────────────
+
+  async function handleUploadImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !createdProductId) return;
+    setUploadingImg(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("is_cover", String(images.length === 0));
+    const res = await fetch(`${API}/admin/products/${createdProductId}/images`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    });
+    if (res.ok) {
+      const img: ProductImage = await res.json();
+      setImages((prev) => [...prev, img]);
+    }
+    setUploadingImg(false);
+    e.target.value = "";
+  }
+
+  async function handleDeleteImage(imgId: number) {
+    await fetch(`${API}/admin/products/${createdProductId}/images/${imgId}`, {
+      method: "DELETE", headers: { Authorization: `Bearer ${token}` },
+    });
+    setImages((prev) => prev.filter((i) => i.id !== imgId));
+  }
+
+  async function handleSetCover(imgId: number) {
+    const res = await fetch(`${API}/admin/products/${createdProductId}/images/${imgId}/set-cover`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setImages((prev) => prev.map((i) => ({ ...i, is_cover: i.id === imgId })));
+    }
+  }
+
   const supMap = Object.fromEntries(suppliers.map((s) => [s.id, s.name]));
   const availableSuppliers = suppliers.filter((s) => !productSuppliers.some((ps) => ps.supplier_id === s.id));
 
@@ -367,7 +413,7 @@ function ProductModal({
 
           {/* Tabs */}
           <div className="flex border-b border-gray-100 shrink-0 px-6">
-            {(["info", "suppliers", "variations"] as Tab[]).map((tabKey) => (
+            {(["info", "images", "suppliers", "variations"] as Tab[]).map((tabKey) => (
               <button
                 key={tabKey}
                 onClick={() => { if (tabKey !== "info" && !createdProductId) return; setTab(tabKey); }}
@@ -376,7 +422,10 @@ function ProductModal({
                   tab === tabKey ? "border-gray-900 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
               >
-                {tabKey === "info" ? t.admin_prod_tab_basic : tabKey === "suppliers" ? t.admin_prod_tab_suppliers : t.admin_prod_tab_variations}
+                {tabKey === "info" ? t.admin_prod_tab_basic
+                  : tabKey === "images" ? t.admin_prod_tab_images
+                  : tabKey === "suppliers" ? t.admin_prod_tab_suppliers
+                  : t.admin_prod_tab_variations}
               </button>
             ))}
           </div>
@@ -417,6 +466,67 @@ function ProductModal({
                 </div>
 
                 {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+              </div>
+            )}
+
+            {/* ── Tab: Imagens ── */}
+            {tab === "images" && (
+              <div className="flex flex-col gap-4">
+                {/* Grid de imagens */}
+                {images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {images.map((img) => (
+                      <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square bg-gray-50">
+                        <img src={img.url} alt={img.alt_text ?? ""} className="w-full h-full object-cover" />
+
+                        {/* Badge capa */}
+                        {img.is_cover && (
+                          <span className="absolute top-1.5 left-1.5 text-[10px] bg-gray-900 text-white px-1.5 py-0.5 rounded-full font-medium">
+                            {t.admin_prod_img_cover}
+                          </span>
+                        )}
+
+                        {/* Ações ao hover */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          {!img.is_cover && (
+                            <button
+                              onClick={() => handleSetCover(img.id)}
+                              title={t.admin_prod_img_set_cover}
+                              className="p-1.5 bg-white rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                              <Star size={13} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteImage(img.id)}
+                            title={t.admin_prod_img_delete}
+                            className="p-1.5 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload */}
+                <label className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors ${uploadingImg ? "opacity-50 pointer-events-none" : "border-gray-200 hover:border-gray-400"}`}>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleUploadImage} disabled={uploadingImg} />
+                  {uploadingImg ? (
+                    <Loader2 size={22} className="animate-spin text-gray-400" />
+                  ) : (
+                    <Upload size={22} className="text-gray-300" />
+                  )}
+                  <span className="text-xs text-gray-400">
+                    {uploadingImg ? t.admin_prod_img_uploading : t.admin_prod_img_upload_hint}
+                  </span>
+                  <span className="text-[10px] text-gray-300">JPEG, PNG, WebP · máx 5 MB</span>
+                </label>
+
+                {images.length === 0 && !uploadingImg && (
+                  <p className="text-xs text-gray-400 text-center -mt-2">{t.admin_prod_img_none}</p>
+                )}
               </div>
             )}
 
