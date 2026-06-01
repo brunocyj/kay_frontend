@@ -360,17 +360,25 @@ function ProductModal({
     const file = e.target.files?.[0];
     if (!file || !createdProductId) return;
     setUploadingImg(true);
+    setError("");
     const fd = new FormData();
     fd.append("file", file);
     fd.append("is_cover", String(images.length === 0));
-    const res = await fetch(`${API}/admin/products/${createdProductId}/images`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: fd,
-    });
-    if (res.ok) {
-      const img: ProductImage = await res.json();
-      setImages((prev) => [...prev, img]);
+    try {
+      const res = await fetch(`${API}/admin/products/${createdProductId}/images`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      if (res.ok) {
+        const img: ProductImage = await res.json();
+        setImages((prev) => [...prev, img]);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setError(err.detail ?? `Erro ${res.status} ao enviar imagem.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha de conexão ao enviar imagem.");
     }
     setUploadingImg(false);
     e.target.value = "";
@@ -524,9 +532,11 @@ function ProductModal({
                   <span className="text-[10px] text-gray-300">JPEG, PNG, WebP · máx 5 MB</span>
                 </label>
 
-                {images.length === 0 && !uploadingImg && (
+                {images.length === 0 && !uploadingImg && !error && (
                   <p className="text-xs text-gray-400 text-center -mt-2">{t.admin_prod_img_none}</p>
                 )}
+
+                {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
               </div>
             )}
 
