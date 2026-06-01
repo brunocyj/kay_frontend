@@ -356,14 +356,16 @@ function ProductModal({
 
   // ── Imagens ────────────────────────────────────────────────────────────────
 
-  async function handleUploadImage(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUploadImage(e: React.ChangeEvent<HTMLInputElement>, asCover: boolean) {
     const file = e.target.files?.[0];
     if (!file || !createdProductId) return;
     setUploadingImg(true);
     setError("");
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("is_cover", String(images.length === 0));
+    // Vira capa se foi solicitado ou se ainda não existe nenhuma capa
+    const makeCover = asCover || !images.some((i) => i.is_cover);
+    fd.append("is_cover", String(makeCover));
     try {
       const res = await fetch(`${API}/admin/products/${createdProductId}/images`, {
         method: "POST",
@@ -372,7 +374,11 @@ function ProductModal({
       });
       if (res.ok) {
         const img: ProductImage = await res.json();
-        setImages((prev) => [...prev, img]);
+        setImages((prev) =>
+          makeCover
+            ? [...prev.map((i) => ({ ...i, is_cover: false })), img]
+            : [...prev, img]
+        );
       } else {
         const err = await res.json().catch(() => ({}));
         setError(err.detail ?? `Erro ${res.status} ao enviar imagem.`);
@@ -479,62 +485,82 @@ function ProductModal({
 
             {/* ── Tab: Imagens ── */}
             {tab === "images" && (
-              <div className="flex flex-col gap-4">
-                {/* Grid de imagens */}
-                {images.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3">
-                    {images.map((img) => (
-                      <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square bg-gray-50">
-                        <img src={img.url} alt={img.alt_text ?? ""} className="w-full h-full object-cover" />
+              <div className="flex flex-col gap-6">
+                {(() => {
+                  const coverImg = images.find((i) => i.is_cover) ?? null;
+                  const galleryImgs = images.filter((i) => !i.is_cover);
+                  return (
+                    <>
+                      {/* ── Capa ── */}
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                          <Star size={12} className="text-amber-400" fill="currentColor" />
+                          {t.admin_prod_img_cover_section}
+                        </p>
+                        <p className="text-[11px] text-gray-400 -mt-1">{t.admin_prod_img_cover_hint}</p>
 
-                        {/* Badge capa */}
-                        {img.is_cover && (
-                          <span className="absolute top-1.5 left-1.5 text-[10px] bg-gray-900 text-white px-1.5 py-0.5 rounded-full font-medium">
-                            {t.admin_prod_img_cover}
-                          </span>
+                        {coverImg ? (
+                          <div className="relative group w-40 rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
+                            <img src={coverImg.url} alt={coverImg.alt_text ?? ""} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button
+                                onClick={() => handleDeleteImage(coverImg.id)}
+                                title={t.admin_prod_img_delete}
+                                className="p-1.5 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className={`w-40 aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${uploadingImg ? "opacity-50 pointer-events-none" : "border-gray-200 hover:border-gray-400"}`}>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadImage(e, true)} disabled={uploadingImg} />
+                            {uploadingImg ? <Loader2 size={20} className="animate-spin text-gray-400" /> : <Upload size={20} className="text-gray-300" />}
+                            <span className="text-[11px] text-gray-400 text-center px-2">{t.admin_prod_img_cover_upload}</span>
+                          </label>
                         )}
+                      </div>
 
-                        {/* Ações ao hover */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          {!img.is_cover && (
-                            <button
-                              onClick={() => handleSetCover(img.id)}
-                              title={t.admin_prod_img_set_cover}
-                              className="p-1.5 bg-white rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                            >
-                              <Star size={13} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteImage(img.id)}
-                            title={t.admin_prod_img_delete}
-                            className="p-1.5 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      {/* ── Galeria ── */}
+                      <div className="flex flex-col gap-2 border-t border-gray-100 pt-5">
+                        <p className="text-xs font-semibold text-gray-700">{t.admin_prod_img_gallery_section}</p>
+                        <p className="text-[11px] text-gray-400 -mt-1">{t.admin_prod_img_gallery_hint}</p>
+
+                        <div className="grid grid-cols-4 gap-3 mt-1">
+                          {galleryImgs.map((img) => (
+                            <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square bg-gray-50">
+                              <img src={img.url} alt={img.alt_text ?? ""} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => handleSetCover(img.id)}
+                                  title={t.admin_prod_img_set_cover}
+                                  className="p-1.5 bg-white rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                                >
+                                  <Star size={12} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteImage(img.id)}
+                                  title={t.admin_prod_img_delete}
+                                  className="p-1.5 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Botão adicionar à galeria */}
+                          <label className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors ${uploadingImg ? "opacity-50 pointer-events-none" : "border-gray-200 hover:border-gray-400"}`}>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadImage(e, false)} disabled={uploadingImg} />
+                            {uploadingImg ? <Loader2 size={18} className="animate-spin text-gray-400" /> : <Plus size={18} className="text-gray-300" />}
+                          </label>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </>
+                  );
+                })()}
 
-                {/* Upload */}
-                <label className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors ${uploadingImg ? "opacity-50 pointer-events-none" : "border-gray-200 hover:border-gray-400"}`}>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleUploadImage} disabled={uploadingImg} />
-                  {uploadingImg ? (
-                    <Loader2 size={22} className="animate-spin text-gray-400" />
-                  ) : (
-                    <Upload size={22} className="text-gray-300" />
-                  )}
-                  <span className="text-xs text-gray-400">
-                    {uploadingImg ? t.admin_prod_img_uploading : t.admin_prod_img_upload_hint}
-                  </span>
-                  <span className="text-[10px] text-gray-300">JPEG, PNG, WebP · máx 5 MB</span>
-                </label>
-
-                {images.length === 0 && !uploadingImg && !error && (
-                  <p className="text-xs text-gray-400 text-center -mt-2">{t.admin_prod_img_none}</p>
-                )}
+                <p className="text-[10px] text-gray-300">JPEG, PNG, WebP · máx 5 MB</p>
 
                 {error && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
               </div>

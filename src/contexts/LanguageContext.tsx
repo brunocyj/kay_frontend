@@ -418,6 +418,11 @@ const dict = {
     admin_prod_img_upload_hint: "Clique para enviar uma imagem",
     admin_prod_img_uploading: "Enviando...",
     admin_prod_img_none: "Nenhuma imagem. Envie a primeira acima.",
+    admin_prod_img_cover_section: "Imagem de capa",
+    admin_prod_img_cover_hint: "Imagem principal exibida na listagem e no topo do produto.",
+    admin_prod_img_cover_upload: "Enviar capa",
+    admin_prod_img_gallery_section: "Galeria",
+    admin_prod_img_gallery_hint: "Imagens adicionais exibidas como miniaturas na página do produto.",
   },
 
   zh: {
@@ -833,6 +838,11 @@ const dict = {
     admin_prod_img_upload_hint: "点击上传图片",
     admin_prod_img_uploading: "上传中...",
     admin_prod_img_none: "暂无图片，请在上方上传。",
+    admin_prod_img_cover_section: "封面图片",
+    admin_prod_img_cover_hint: "在列表和商品页顶部显示的主图。",
+    admin_prod_img_cover_upload: "上传封面",
+    admin_prod_img_gallery_section: "图库",
+    admin_prod_img_gallery_hint: "在商品页以缩略图形式显示的附加图片。",
   },
 } as const;
 

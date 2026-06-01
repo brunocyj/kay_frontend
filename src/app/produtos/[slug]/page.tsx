@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import AddToCart from "@/components/AddToCart";
+import ProductGallery from "@/components/ProductGallery";
 import {
   ProductBreadcrumb,
-  ProductNoImage,
   ProductFeaturedBadge,
   ProductPaymentNote,
   ProductDescriptionTitle,
@@ -43,7 +43,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product || !product.is_active) notFound();
 
   const cover = product.images.find((i) => i.is_cover) ?? product.images[0];
-  const gallery = product.images.filter((i) => !i.is_cover && i.url !== cover?.url);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -51,29 +50,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* ── Galeria ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-3">
-          <div className="bg-gray-50 rounded-2xl aspect-square overflow-hidden">
-            {cover ? (
-              <img
-                src={cover.url}
-                alt={cover.alt_text ?? product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <ProductNoImage />
-            )}
-          </div>
-
-          {gallery.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {gallery.map((img) => (
-                <div key={img.id} className="w-16 h-16 shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-                  <img src={img.url} alt={img.alt_text ?? ""} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={product.images} productName={product.name} />
 
         {/* ── Info ────────────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-5">
