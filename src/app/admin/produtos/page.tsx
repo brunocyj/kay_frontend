@@ -2,10 +2,11 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Plus, Pencil, Power, X, Loader2, Package,
-  Truck, Layers, Star, ChevronDown, Trash2, ImageIcon, Upload,
+  Truck, Layers, Star, ChevronDown, Trash2, ImageIcon, Upload, FolderPlus,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -90,6 +91,15 @@ export default function ProdutosPage() {
     fetchAll();
   }
 
+  async function deletePermanent(p: Product) {
+    if (!confirm(t.admin_prod_delete_confirm.replace("{name}", p.name))) return;
+    await fetch(`${API}/admin/products/${p.id}?permanent=true`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    fetchAll();
+  }
+
   // Achata categorias para o select
   const flatCategories: { id: number; label: string }[] = [];
   function flattenCats(cats: Category[], depth = 0) {
@@ -123,12 +133,20 @@ export default function ProdutosPage() {
             <h1 className="text-xl font-semibold text-gray-900">{t.admin_prod_title}</h1>
             <p className="text-sm text-gray-400 mt-0.5">{t.admin_prod_subtitle}</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <Plus size={15} /> {t.admin_prod_new}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/produtos/massa"
+              className="flex items-center gap-2 border border-gray-200 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <FolderPlus size={15} /> {t.admin_bulk_new}
+            </Link>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <Plus size={15} /> {t.admin_prod_new}
+            </button>
+          </div>
         </div>
 
         {/* Lista */}
@@ -188,6 +206,13 @@ export default function ProdutosPage() {
                     title={p.is_active ? t.admin_cat_deactivate : t.admin_cat_activate}
                   >
                     <Power size={13} />
+                  </button>
+                  <button
+                    onClick={() => deletePermanent(p)}
+                    className="p-1.5 rounded-lg text-gray-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    title={t.admin_prod_delete}
+                  >
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </div>
