@@ -47,3 +47,13 @@ export function ProductDescriptionTitle() {
     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t.product_description}</p>
   );
 }
+
+export function ProductUnitsPerBox({ units }: { units: number }) {
+  const { t } = useLanguage();
+  return (
+    <div className="inline-flex self-start items-center gap-2 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg">
+      <span className="font-semibold text-gray-900">{units}</span>
+      {t.product_units_per_box}
+    </div>
+  );
+}

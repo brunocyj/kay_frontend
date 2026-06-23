@@ -6,6 +6,7 @@ import {
   ProductFeaturedBadge,
   ProductPaymentNote,
   ProductDescriptionTitle,
+  ProductUnitsPerBox,
 } from "@/components/ProductDetailTexts";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -18,7 +19,8 @@ type Variation = {
 type Product = {
   id: number; name: string; slug: string;
   short_description: string | null; description: string | null;
-  price: string; is_active: boolean; is_featured: boolean;
+  price: string; units_per_box: number | null;
+  is_active: boolean; is_featured: boolean;
   category_id: number | null;
   images: { id: number; url: string; is_cover: boolean; alt_text?: string }[];
   variations: Variation[];
@@ -64,6 +66,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="text-3xl font-bold text-gray-900">{fmt(product.price)}</div>
+
+          {product.units_per_box ? <ProductUnitsPerBox units={product.units_per_box} /> : null}
 
           <AddToCart
             productId={product.id}

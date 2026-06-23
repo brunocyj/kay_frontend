@@ -34,7 +34,7 @@ type ProductImage = {
 type Product = {
   id: number; name: string; slug: string;
   short_description: string | null; description: string | null;
-  category_id: number | null; price: string;
+  category_id: number | null; price: string; units_per_box: number | null;
   is_active: boolean; is_featured: boolean;
   images: ProductImage[]; variations: Variation[]; suppliers: ProductSupplier[];
   created_at: string;
@@ -248,6 +248,7 @@ function ProductModal({
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [price, setPrice] = useState(product?.price ?? "");
+  const [unitsPerBox, setUnitsPerBox] = useState(product?.units_per_box ? String(product.units_per_box) : "");
   const [shortDesc, setShortDesc] = useState(product?.short_description ?? "");
   const [desc, setDesc] = useState(product?.description ?? "");
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ""));
@@ -292,6 +293,7 @@ function ProductModal({
       description: desc.trim() || null,
       category_id: categoryId ? Number(categoryId) : null,
       price: Number(price),
+      units_per_box: unitsPerBox ? Number(unitsPerBox) : null,
       is_featured: isFeatured,
     };
     if (isEdit) body.is_active = isActive;
@@ -484,6 +486,9 @@ function ProductModal({
                   </Field>
                   <Field label={t.admin_prod_field_price}>
                     <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0,00" className="inp" />
+                  </Field>
+                  <Field label={t.admin_prod_field_units_per_box}>
+                    <input type="number" step="1" min="1" value={unitsPerBox} onChange={(e) => setUnitsPerBox(e.target.value)} placeholder="0" className="inp" />
                   </Field>
                   <Field label={t.admin_prod_field_category} className="col-span-2">
                     <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="inp">

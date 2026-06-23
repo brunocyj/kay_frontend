@@ -20,12 +20,12 @@ type Row = {
   uid: string;
   name: string;
   price: string;
+  units_per_box: string;
   category_id: string;
   short_description: string;
   description: string;
   supplier_id: string;
   cost_price: string;
-  supplier_sku: string;
   is_featured: boolean;
   files: File[];
 };
@@ -55,8 +55,8 @@ function imageMime(file: File): string | null {
 function newRow(): Row {
   return {
     uid: Math.random().toString(36).slice(2),
-    name: "", price: "", category_id: "", short_description: "",
-    description: "", supplier_id: "", cost_price: "", supplier_sku: "",
+    name: "", price: "", units_per_box: "", category_id: "", short_description: "",
+    description: "", supplier_id: "", cost_price: "",
     is_featured: false, files: [],
   };
 }
@@ -210,11 +210,11 @@ export default function BulkProductsPage() {
         description: r.description.trim() || null,
         category_id: r.category_id ? Number(r.category_id) : null,
         price: Number(r.price),
+        units_per_box: r.units_per_box ? Number(r.units_per_box) : null,
         is_featured: r.is_featured,
         images: imagesByRow[rowIdx],
         supplier_id: r.supplier_id ? Number(r.supplier_id) : null,
         cost_price: r.supplier_id && r.cost_price ? Number(r.cost_price) : null,
-        supplier_sku: r.supplier_id ? (r.supplier_sku.trim() || null) : null,
       }));
 
       // 4. Uma chamada para criar tudo
@@ -399,6 +399,16 @@ function RowCard({
         </div>
 
         <div>
+          <label className="block text-xs text-gray-500 mb-1">{t.admin_bulk_units_per_box}</label>
+          <input
+            type="number" step="1" min="1"
+            value={row.units_per_box}
+            onChange={(e) => onChange({ units_per_box: e.target.value })}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-400"
+          />
+        </div>
+
+        <div>
           <label className="block text-xs text-gray-500 mb-1">{t.admin_bulk_category}</label>
           <select
             value={row.category_id}
@@ -442,16 +452,6 @@ function RowCard({
             value={row.cost_price}
             disabled={!row.supplier_id}
             onChange={(e) => onChange({ cost_price: e.target.value })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-400 disabled:bg-gray-50"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-xs text-gray-500 mb-1">{t.admin_bulk_supplier_sku}</label>
-          <input
-            value={row.supplier_sku}
-            disabled={!row.supplier_id}
-            onChange={(e) => onChange({ supplier_sku: e.target.value })}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-400 disabled:bg-gray-50"
           />
         </div>
