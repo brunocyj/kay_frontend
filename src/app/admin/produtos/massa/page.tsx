@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Plus, Trash2, FolderOpen, Loader2, Star,
-  CheckCircle2, XCircle, Images,
+  CheckCircle2, XCircle, Images, ImagePlus, X,
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -25,6 +25,7 @@ type Row = {
   description: string;
   supplier_id: string;
   cost_price: string;
+  supplier_sku: string;
   is_featured: boolean;
   files: File[];
 };
@@ -55,8 +56,8 @@ function newRow(): Row {
   return {
     uid: Math.random().toString(36).slice(2),
     name: "", price: "", category_id: "", short_description: "",
-    description: "", supplier_id: "", cost_price: "", is_featured: false,
-    files: [],
+    description: "", supplier_id: "", cost_price: "", supplier_sku: "",
+    is_featured: false, files: [],
   };
 }
 
@@ -113,12 +114,28 @@ export default function BulkProductsPage() {
     setRows((rs) => rs.map((r) => (r.uid === uid ? { ...r, ...patch } : r)));
   }
 
-  function pickFiles(uid: string, fileList: FileList | null) {
+  function addFiles(uid: string, fileList: FileList | null) {
     if (!fileList) return;
-    const imgs = Array.from(fileList)
-      .filter((f) => imageMime(f) !== null)
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    update(uid, { files: imgs });
+    const incoming = Array.from(fileList).filter((f) => imageMime(f) !== null);
+    if (incoming.length === 0) return;
+    setRows((rs) => rs.map((r) => {
+      if (r.uid !== uid) return r;
+      // Mescla com as imagens já escolhidas, evitando duplicatas (nome + tamanho)
+      const map = new Map<string, File>();
+      [...r.files, ...incoming].forEach((f) => map.set(`${f.name}_${f.size}`, f));
+      const merged = Array.from(map.values())
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+      return { ...r, files: merged };
+    }));
+  }
+
+  function removeFile(uid: string, idx: number) {
+    setRows((rs) => rs.map((r) =>
+      r.uid === uid ? { ...r, files: r.files.filter((_, i) => i !== idx) } : r));
+  }
+
+  function clearFiles(uid: string) {
+    update(uid, { files: [] });
   }
 
   function addRow() { setRows((rs) => [...rs, newRow()]); }
@@ -197,6 +214,7 @@ export default function BulkProductsPage() {
         images: imagesByRow[rowIdx],
         supplier_id: r.supplier_id ? Number(r.supplier_id) : null,
         cost_price: r.supplier_id && r.cost_price ? Number(r.cost_price) : null,
+        supplier_sku: r.supplier_id ? (r.supplier_sku.trim() || null) : null,
       }));
 
       // 4. Uma chamada para criar tudo
@@ -291,7 +309,9 @@ export default function BulkProductsPage() {
             categories={categories}
             suppliers={suppliers}
             onChange={(patch) => update(r.uid, patch)}
-            onPickFiles={(fl) => pickFiles(r.uid, fl)}
+            onAddFiles={(fl) => addFiles(r.uid, fl)}
+            onRemoveFile={(idx) => removeFile(r.uid, idx)}
+            onClearFiles={() => clearFiles(r.uid)}
             onRemove={() => removeRow(r.uid)}
             t={t}
             disabled={submitting}
@@ -332,19 +352,22 @@ export default function BulkProductsPage() {
 // ── Card de produto ────────────────────────────────────────────────────────
 
 function RowCard({
-  row, index, categories, suppliers, onChange, onPickFiles, onRemove, t, disabled,
+  row, index, categories, suppliers, onChange, onAddFiles, onRemoveFile, onClearFiles, onRemove, t, disabled,
 }: {
   row: Row;
   index: number;
   categories: { id: number; label: string }[];
   suppliers: Supplier[];
   onChange: (patch: Partial<Row>) => void;
-  onPickFiles: (fl: FileList | null) => void;
+  onAddFiles: (fl: FileList | null) => void;
+  onRemoveFile: (idx: number) => void;
+  onClearFiles: () => void;
   onRemove: () => void;
   t: Record<string, string>;
   disabled: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5">
@@ -422,13 +445,24 @@ function RowCard({
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-400 disabled:bg-gray-50"
           />
         </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-xs text-gray-500 mb-1">{t.admin_bulk_supplier_sku}</label>
+          <input
+            value={row.supplier_sku}
+            disabled={!row.supplier_id}
+            onChange={(e) => onChange({ supplier_sku: e.target.value })}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-400 disabled:bg-gray-50"
+          />
+        </div>
       </div>
 
       {/* Imagens */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex flex-wrap items-center gap-3">
+          {/* Input de pasta inteira */}
           <input
-            ref={inputRef}
+            ref={folderRef}
             type="file"
             accept="image/*"
             multiple
@@ -436,21 +470,48 @@ function RowCard({
             webkitdirectory=""
             directory=""
             className="hidden"
-            onChange={(e) => onPickFiles(e.target.files)}
+            onChange={(e) => { onAddFiles(e.target.files); e.target.value = ""; }}
+          />
+          {/* Input de imagens individuais */}
+          <input
+            ref={filesRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { onAddFiles(e.target.files); e.target.value = ""; }}
           />
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={() => folderRef.current?.click()}
             disabled={disabled}
             className="flex items-center gap-2 border border-gray-200 text-gray-700 text-sm px-3 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             <FolderOpen size={15} /> {t.admin_bulk_pick_folder}
           </button>
+          <button
+            type="button"
+            onClick={() => filesRef.current?.click()}
+            disabled={disabled}
+            className="flex items-center gap-2 border border-gray-200 text-gray-700 text-sm px-3 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            <ImagePlus size={15} /> {t.admin_bulk_pick_files}
+          </button>
 
           {row.files.length > 0 && (
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <Images size={14} /> {row.files.length} {t.admin_bulk_images_count}
-            </span>
+            <>
+              <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <Images size={14} /> {row.files.length} {t.admin_bulk_images_count}
+              </span>
+              <button
+                type="button"
+                onClick={onClearFiles}
+                disabled={disabled}
+                className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
+              >
+                {t.admin_bulk_clear_images}
+              </button>
+            </>
           )}
 
           <label className="flex items-center gap-1.5 text-xs text-gray-600 ml-auto cursor-pointer">
@@ -469,7 +530,7 @@ function RowCard({
             <p className="text-[11px] text-gray-400 mt-2">{t.admin_bulk_cover_note}</p>
             <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
               {row.files.slice(0, 12).map((f, fi) => (
-                <div key={fi} className="relative shrink-0">
+                <div key={`${f.name}_${f.size}`} className="relative shrink-0 group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={URL.createObjectURL(f)}
@@ -481,6 +542,14 @@ function RowCard({
                       {t.admin_bulk_cover_label}
                     </span>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => onRemoveFile(fi)}
+                    disabled={disabled}
+                    className="absolute -top-1.5 -right-1.5 bg-white border border-gray-200 rounded-full p-0.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  >
+                    <X size={11} />
+                  </button>
                 </div>
               ))}
               {row.files.length > 12 && (
