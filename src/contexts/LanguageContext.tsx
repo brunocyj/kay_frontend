@@ -75,6 +75,9 @@ const dict = {
     products_none_try: "Tente outros filtros ou ",
     products_none_see_all: "ver todos os produtos",
     products_none_soon: "Em breve novos produtos por aqui.",
+    products_load_more: "Ver mais",
+    products_loading_more: "Carregando...",
+    products_all_loaded: "Todos os produtos foram carregados.",
 
     // ── Product detail ────────────────────────────────────────────────────
     product_home: "Início",
@@ -537,6 +540,9 @@ const dict = {
     products_none_try: "请尝试其他筛选条件，或 ",
     products_none_see_all: "查看全部商品",
     products_none_soon: "更多商品即将上线。",
+    products_load_more: "加载更多",
+    products_loading_more: "加载中...",
+    products_all_loaded: "已加载全部商品。",
 
     // ── Product detail ────────────────────────────────────────────────────
     product_home: "首页",

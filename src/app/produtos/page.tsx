@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const PAGE_SIZE = 40;
 
 type Category = { id: number; name: string; slug: string; children: Category[] };
 type Product = {
@@ -23,6 +24,9 @@ function ProdutosContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [skip, setSkip] = useState(0);
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [selectedCat, setSelectedCat] = useState<string>(searchParams.get("category") ?? "");
   const [featuredOnly, setFeaturedOnly] = useState(searchParams.get("destaque") === "true");
@@ -37,23 +41,46 @@ function ProdutosContent() {
   }
   flatten(categories);
 
-  async function fetchProducts(catId: string, q: string, featured: boolean) {
-    setLoading(true);
-    const params = new URLSearchParams({ limit: "40" });
+  function buildParams(catId: string, q: string, featured: boolean, offset: number) {
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), skip: String(offset) });
     if (catId) params.set("category_id", catId);
     if (featured) params.set("featured_only", "true");
-    const res = await fetch(`${API}/products?${params}`);
-    let data: Product[] = await res.json();
-    if (q.trim()) {
-      const lower = q.toLowerCase();
-      data = data.filter(
-        (p) =>
-          p.name.toLowerCase().includes(lower) ||
-          (p.short_description ?? "").toLowerCase().includes(lower)
-      );
-    }
+    return params;
+  }
+
+  function filterBySearch(data: Product[], q: string): Product[] {
+    if (!q.trim()) return data;
+    const lower = q.toLowerCase();
+    return data.filter(
+      (p) =>
+        p.name.toLowerCase().includes(lower) ||
+        (p.short_description ?? "").toLowerCase().includes(lower),
+    );
+  }
+
+  async function fetchProducts(catId: string, q: string, featured: boolean) {
+    setLoading(true);
+    setSkip(0);
+    const res = await fetch(`${API}/products?${buildParams(catId, q, featured, 0)}`);
+    const raw: Product[] = await res.json();
+    const data = filterBySearch(raw, q);
     setProducts(data);
+    // Se a API devolveu PAGE_SIZE itens pode haver mais (a pesquisa local pode ter filtrado alguns,
+    // então usamos o tamanho da resposta bruta como indicador)
+    setHasMore(raw.length === PAGE_SIZE);
     setLoading(false);
+  }
+
+  async function loadMore() {
+    setLoadingMore(true);
+    const nextSkip = skip + PAGE_SIZE;
+    const res = await fetch(`${API}/products?${buildParams(selectedCat, search, featuredOnly, nextSkip)}`);
+    const raw: Product[] = await res.json();
+    const data = filterBySearch(raw, search);
+    setProducts((prev) => [...prev, ...data]);
+    setSkip(nextSkip);
+    setHasMore(raw.length === PAGE_SIZE);
+    setLoadingMore(false);
   }
 
   useEffect(() => {
@@ -69,6 +96,7 @@ function ProdutosContent() {
     if (search) params.set("q", search);
     if (featuredOnly) params.set("destaque", "true");
     router.replace(`/produtos${params.toString() ? "?" + params.toString() : ""}`, { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCat, featuredOnly]);
 
   function handleSearch(e: React.FormEvent) {
@@ -200,11 +228,28 @@ function ProdutosContent() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+
+              {/* Paginação */}
+              <div className="mt-10 flex justify-center">
+                {hasMore ? (
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="flex items-center gap-2 border border-gray-200 text-gray-700 text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                  >
+                    {loadingMore ? t.products_loading_more : t.products_load_more}
+                  </button>
+                ) : (
+                  <p className="text-xs text-gray-400">{t.products_all_loaded}</p>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
